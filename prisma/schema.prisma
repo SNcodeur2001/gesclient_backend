@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  DIRECTEUR
+  COMMERCIAL
+  COLLECTEUR
+}
+
+enum ClientType {
+  APPORTEUR
+  ACHETEUR
+}
+
+enum ClientStatut {
+  ACTIF
+  PROSPECT
+  INACTIF
+}
+
+enum CommandeType {
+  SUR_PLACE
+  A_DISTANCE
+}
+
+enum CommandeStatut {
+  EN_ATTENTE_ACOMPTE
+  EN_PREPARATION
+  PRETE
+  FINALISEE
+}
+
+enum PaiementType {
+  ACOMPTE
+  SOLDE
+}
+
+enum ModePaiement {
+  ESPECES
+  VIREMENT
+  CHEQUE
+  MOBILE_MONEY
+}
+
+enum NotificationType {
+  NOUVELLE_COLLECTE
+  ACOMPTE_RECU
+  COMMANDE_PRETE
+  COMMANDE_FINALISEE
+  IMPORT_TERMINE
+  COMMANDE_EN_ATTENTE
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  IMPORT
+  EXPORT
+}
+
+enum ImportStatut {
+  EN_COURS
+  TERMINE
+  ERREUR
+}
+
+model User {
+  id              String         @id @default(uuid())
+  nom             String
+  prenom          String
+  email           String         @unique
+  password        String
+  role            Role
+  actif           Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  clientsAssignes Client[]
+  collectes       Collecte[]
+  commandes       Commande[]
+  notifications   Notification[]
+  auditLogs       AuditLog[]
+  imports         Import[]
+  paiements       Paiement[]
+}
+
+model Client {
+  id             String         @id @default(uuid())
+  nom            String
+  prenom         String?
+  email          String?        @unique
+  telephone      String?
+  adresse        String?
+  type           ClientType
+  statut         ClientStatut   @default(PROSPECT)
+  totalRevenue   Float          @default(0)
+  notes          String?
+  assignedUserId String?
+  assignedUser   User?          @relation(fields: [assignedUserId],references: [id])
+  collectes      Collecte[]
+  commandes      Commande[]
+  notifications  Notification[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+}
+
+model Collecte {
+  id           String   @id @default(uuid())
+  apporteurId  String
+  apporteur    Client   @relation(fields: [apporteurId],references: [id])
+  quantiteKg   Float
+  prixUnitaire Float
+  montantTotal Float
+  notes        String?
+  collecteurId String
+  collecteur   User     @relation(fields: [collecteurId],references: [id])
+  createdAt    DateTime @default(now())
+}
+
+model Commande {
+  id             String         @id @default(uuid())
+  reference      String         @unique
+  type           CommandeType
+  statut         CommandeStatut @default(EN_ATTENTE_ACOMPTE)
+  acheteurId     String
+  acheteur       Client         @relation(fields: [acheteurId],references: [id])
+  produit        String
+  quantite       Float
+  prixUnitaire   Float
+  montantHT      Float
+  tva            Float          @default(0)
+  montantTTC     Float
+  acompteMinimum Float?
+  acompteVerse   Float          @default(0)
+  soldeRestant   Float
+  commercialId   String
+  commercial     User           @relation(fields: [commercialId], references: [id])
+  paiements      Paiement[]
+  notifications  Notification[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model Paiement {
+  id           String       @id @default(uuid())
+  commandeId   String
+  commande     Commande     @relation( fields: [commandeId], references: [id])
+  type         PaiementType
+  montant      Float
+  modePaiement ModePaiement
+  valideParId  String
+  validePar    User         @relation( fields: [valideParId],references: [id])
+  createdAt    DateTime     @default(now())
+}
+
+model Import {
+  id          String       @id @default(uuid())
+  filename    String
+  totalRows   Int
+  validRows   Int
+  invalidRows Int
+  errors      Json?
+  statut      ImportStatut @default(EN_COURS)
+  userId      String
+  user        User         @relation( fields: [userId], references: [id])
+  createdAt   DateTime     @default(now())
+}
+
+model Notification {
+  id         String           @id @default(uuid())
+  userId     String
+  user       User             @relation( fields: [userId],references: [id])
+  type       NotificationType
+  message    String
+  lu         Boolean          @default(false)
+  lien       String?
+  clientId   String?
+  client     Client?          @relation(fields: [clientId],references: [id])
+  commandeId String?
+  commande   Commande?        @relation(fields: [commandeId],references: [id])
+  createdAt  DateTime         @default(now())
+}
+
+model AuditLog {
+  id             String      @id @default(uuid())
+  userId         String
+  user           User        @relation(fields: [userId],references: [id])
+  action         AuditAction
+  entite         String
+  entiteId       String
+  ancienneValeur Json?
+  nouvelleValeur Json?
+  createdAt      DateTime    @default(now())
+}

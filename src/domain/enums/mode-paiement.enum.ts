@@ -1,0 +1,6 @@
+export enum ModePaiement {
+  ESPECES = 'ESPECES',
+  VIREMENT = 'VIREMENT',
+  CHEQUE = 'CHEQUE',
+  MOBILE_MONEY = 'MOBILE_MONEY',
+}
