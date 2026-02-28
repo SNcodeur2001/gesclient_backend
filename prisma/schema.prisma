@@ -88,6 +88,7 @@ model User {
   auditLogs       AuditLog[]
   imports         Import[]
   paiements       Paiement[]
+  refreshTokens   RefreshToken[]
 }
 
 model Client {
@@ -198,4 +199,18 @@ model AuditLog {
   ancienneValeur Json?
   nouvelleValeur Json?
   createdAt      DateTime    @default(now())
+}
+
+model RefreshToken {
+  id           String   @id @default(uuid())
+  token        String   @unique
+  tokenHash    String
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
 }

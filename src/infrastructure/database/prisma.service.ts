@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import 'dotenv/config';
 
 @Injectable()
 export class PrismaService implements OnModuleInit {
@@ -56,5 +57,9 @@ export class PrismaService implements OnModuleInit {
 
   get import() {
     return this.prisma.import;
+  }
+
+  get refreshToken() {
+    return this.prisma.refreshToken;
   }
 }

@@ -4,15 +4,20 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from './infrastructure/database/prisma.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './presentation/auth/auth.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
     ThrottlerModule.forRoot([{
       ttl: 60000,
       limit: 100,
     }]),
     PrismaModule,
+    AuthModule
     // Les modules Presentation seront ajoutés
     // au fur et à mesure
   ],
