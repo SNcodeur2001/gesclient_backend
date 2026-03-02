@@ -23,6 +23,7 @@ import { GetProfileUseCase } from
   '../../application/auth/get-profile.use-case';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { LogoutDto } from './dto/logout.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
@@ -69,11 +70,15 @@ export class AuthController {
   async logout(
     @Request() req: any,
     @Headers('authorization') authorization: string,
-    @Body() body: { refresh_token?: string },
+    @Body() body: LogoutDto,
   ) {
     // Extract access token from Authorization header (Bearer token)
     const accessToken = authorization?.replace('Bearer ', '');
-    await this.logoutUseCase.execute(req.user.id, accessToken, body.refresh_token);
+    await this.logoutUseCase.execute(
+      req.user.id,
+      accessToken,
+      body?.refresh_token,
+    );
     return { success: true, message: 'Déconnexion réussie' };
   }
 
