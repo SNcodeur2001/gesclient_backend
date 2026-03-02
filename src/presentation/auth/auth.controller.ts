@@ -5,6 +5,7 @@ import {
   Body,
   Request,
   UseGuards,
+  Headers,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -65,8 +66,14 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Déconnexion utilisateur' })
   @ApiResponse({ status: 200 })
-  async logout(@Request() req: any, @Body() body: { refresh_token?: string }) {
-    await this.logoutUseCase.execute(req.user.id, body.refresh_token);
+  async logout(
+    @Request() req: any,
+    @Headers('authorization') authorization: string,
+    @Body() body: { refresh_token?: string },
+  ) {
+    // Extract access token from Authorization header (Bearer token)
+    const accessToken = authorization?.replace('Bearer ', '');
+    await this.logoutUseCase.execute(req.user.id, accessToken, body.refresh_token);
     return { success: true, message: 'Déconnexion réussie' };
   }
 

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CacheModule } from '@nestjs/cache-manager';
 
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './guards/jwt.strategy';
@@ -27,6 +28,8 @@ import { JwtTokenService } from
   '../../infrastructure/services/jwt-token.service';
 import { PrismaAuditLogRepository } from
   '../../infrastructure/database/repositories/prisma-audit-log.repository';
+import { TokenBlacklistServiceImpl } from
+  '../../infrastructure/services/token-blacklist.service';
 
 import { USER_REPOSITORY } from
   '../../domain/ports/repositories/user.repository';
@@ -38,10 +41,22 @@ import { TOKEN_SERVICE } from
   '../../domain/ports/services/token.service';
 import { AUDIT_LOG_REPOSITORY } from
   '../../domain/ports/repositories/audit-log.repository';
+import { TOKEN_BLACKLIST_SERVICE } from
+  '../../infrastructure/services/token-blacklist.service';
 
 @Module({
   imports: [
     PassportModule,
+    CacheModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        store: 'redis',
+        host: config.get<string>('REDIS_HOST') || 'localhost',
+        port: parseInt(config.get<string>('REDIS_PORT') || '6379'),
+        ttl: 900, // 15 minutes in seconds (max TTL for access tokens)
+      }),
+      inject: [ConfigService],
+    }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
@@ -75,6 +90,8 @@ import { AUDIT_LOG_REPOSITORY } from
       useClass: JwtTokenService },
     { provide: AUDIT_LOG_REPOSITORY,
       useClass: PrismaAuditLogRepository },
+    { provide: TOKEN_BLACKLIST_SERVICE,
+      useClass: TokenBlacklistServiceImpl },
   ],
   exports: [JwtAuthGuard, RolesGuard, JwtStrategy],
 })
