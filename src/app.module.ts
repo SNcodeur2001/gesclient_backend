@@ -5,6 +5,7 @@ import { PrismaModule } from './infrastructure/database/prisma.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './presentation/auth/auth.module';
+import { ClientsModule } from './presentation/clients/clients.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { AuthModule } from './presentation/auth/auth.module';
       limit: 100,
     }]),
     PrismaModule,
-    AuthModule
+    AuthModule,
+    ClientsModule
     // Les modules Presentation seront ajoutés
     // au fur et à mesure
   ],

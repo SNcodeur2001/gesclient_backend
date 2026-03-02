@@ -1,23 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { ClientRepository } from '../../../domain/ports/repositories/client.repository';
-import { Client } from '../../../domain/entities/client.entity';
-import { ClientType } from '../../../domain/enums/client-type.enum';
-import { ClientStatut } from '../../../domain/enums/client-statut.enum';
+import { ClientRepository } from
+  '../../../domain/ports/repositories/client.repository';
+import { Client } from
+  '../../../domain/entities/client.entity';
+import { ClientType } from
+  '../../../domain/enums/client-type.enum';
+import { ClientStatut } from
+  '../../../domain/enums/client-statut.enum';
 
 @Injectable()
-export class PrismaClientRepository implements ClientRepository {
+export class PrismaClientRepository
+  implements ClientRepository {
+
   constructor(private readonly prisma: PrismaService) {}
 
   async findById(id: string): Promise<Client | null> {
-    const raw = await this.prisma.client.findUnique({
+    const raw = await this.prisma.client.findFirst({
       where: { id, deletedAt: null },
+      include: { assignedUser: true },
     });
     return raw ? this.toDomain(raw) : null;
   }
 
   async findByEmail(email: string): Promise<Client | null> {
-    const raw = await this.prisma.client.findUnique({
+    const raw = await this.prisma.client.findFirst({
       where: { email, deletedAt: null },
     });
     return raw ? this.toDomain(raw) : null;
@@ -31,27 +38,24 @@ export class PrismaClientRepository implements ClientRepository {
     limit: number;
   }): Promise<{ items: Client[]; total: number }> {
     const where: any = { deletedAt: null };
-
-    if (filters.type) {
-      where.type = filters.type;
-    }
-    if (filters.statut) {
-      where.statut = filters.statut;
-    }
+    if (filters.type) where.type = filters.type;
+    if (filters.statut) where.statut = filters.statut;
     if (filters.search) {
       where.OR = [
-        { nom: { contains: filters.search, mode: 'insensitive' } },
-        { prenom: { contains: filters.search, mode: 'insensitive' } },
-        { email: { contains: filters.search, mode: 'insensitive' } },
-        { telephone: { contains: filters.search, mode: 'insensitive' } },
+        { nom: { contains: filters.search,
+            mode: 'insensitive' } },
+        { email: { contains: filters.search,
+            mode: 'insensitive' } },
+        { telephone: { contains: filters.search,
+            mode: 'insensitive' } },
       ];
     }
 
     const skip = (filters.page - 1) * filters.limit;
-
-    const [items, total] = await Promise.all([
+    const [raws, total] = await Promise.all([
       this.prisma.client.findMany({
         where,
+        include: { assignedUser: true },
         skip,
         take: filters.limit,
         orderBy: { createdAt: 'desc' },
@@ -59,20 +63,20 @@ export class PrismaClientRepository implements ClientRepository {
       this.prisma.client.count({ where }),
     ]);
 
-    return {
-      items: items.map(this.toDomain),
-      total,
-    };
+    return { items: raws.map(r => this.toDomain(r)), total };
   }
 
-  async create(data: Omit<Client, 'id' | 'createdAt'>): Promise<Client> {
-    const raw = await this.prisma.client.create({
-      data,
-    });
+  async create(
+    data: Omit<Client, 'id' | 'createdAt'>,
+  ): Promise<Client> {
+    const raw = await this.prisma.client.create({ data });
     return this.toDomain(raw);
   }
 
-  async update(id: string, data: Partial<Client>): Promise<Client> {
+  async update(
+    id: string,
+    data: Partial<Client>,
+  ): Promise<Client> {
     const raw = await this.prisma.client.update({
       where: { id },
       data,
@@ -92,20 +96,11 @@ export class PrismaClientRepository implements ClientRepository {
     statut?: ClientStatut;
   }): Promise<Client[]> {
     const where: any = { deletedAt: null };
+    if (filters.type) where.type = filters.type;
+    if (filters.statut) where.statut = filters.statut;
 
-    if (filters.type) {
-      where.type = filters.type;
-    }
-    if (filters.statut) {
-      where.statut = filters.statut;
-    }
-
-    const raws = await this.prisma.client.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return raws.map(this.toDomain);
+    const raws = await this.prisma.client.findMany({ where });
+    return raws.map(r => this.toDomain(r));
   }
 
   async createMany(
@@ -113,6 +108,7 @@ export class PrismaClientRepository implements ClientRepository {
   ): Promise<number> {
     const result = await this.prisma.client.createMany({
       data,
+      skipDuplicates: true,
     });
     return result.count;
   }

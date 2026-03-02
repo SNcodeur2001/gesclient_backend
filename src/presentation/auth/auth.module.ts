@@ -93,6 +93,6 @@ import { TOKEN_BLACKLIST_SERVICE } from
     { provide: TOKEN_BLACKLIST_SERVICE,
       useClass: TokenBlacklistServiceImpl },
   ],
-  exports: [JwtAuthGuard, RolesGuard, JwtStrategy],
+  exports: [JwtAuthGuard, RolesGuard, JwtStrategy, TOKEN_BLACKLIST_SERVICE],
 })
 export class AuthModule {}
