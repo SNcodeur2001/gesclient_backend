@@ -6,6 +6,7 @@ import {
 import {
   ApiTags, ApiBearerAuth,
   ApiOperation, ApiResponse,
+  ApiQuery, ApiConsumes, ApiBody,
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { plainToInstance } from 'class-transformer';
@@ -65,7 +66,14 @@ export class ClientsController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Lister les clients' })
+  @ApiOperation({ summary: 'Lister tous les clients avec pagination et filtres' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Numéro de page (défaut: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Nombre de résultats par page (défaut: 10)' })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Rechercher par nom ou email' })
+  @ApiQuery({ name: 'type', required: false, enum: ClientType, description: 'Filtrer par type: APPORTEUR ou ACHETEUR' })
+  @ApiQuery({ name: 'statut', required: false, enum: ClientStatut, description: 'Filtrer par statut: ACTIF, PROSPECT ou INACTIF' })
+  @ApiResponse({ status: 200, description: 'Liste des clients récupérée avec succès' })
+  @ApiResponse({ status: 401, description: 'Non authentifié' })
   async findAll(
     @Query('page') page = 1,
     @Query('limit') limit = 10,
@@ -86,7 +94,10 @@ export class ClientsController {
   }
 
   @Get('export')
-  @ApiOperation({ summary: 'Exporter clients en CSV' })
+  @ApiOperation({ summary: 'Exporter les clients en fichier CSV' })
+  @ApiQuery({ name: 'type', required: false, enum: ClientType, description: 'Filtrer par type de client' })
+  @ApiQuery({ name: 'statut', required: false, enum: ClientStatut, description: 'Filtrer par statut du client' })
+  @ApiResponse({ status: 200, description: 'Fichier CSV généré', content: { 'text/csv': { schema: { type: 'string' } } } })
   async export(
     @Request() req: any,
     @Res() res: any,
@@ -106,7 +117,10 @@ export class ClientsController {
   }
 
   @Get('export/excel')
-  @ApiOperation({ summary: 'Exporter clients en Excel' })
+  @ApiOperation({ summary: 'Exporter les clients en fichier Excel (.xlsx)' })
+  @ApiQuery({ name: 'type', required: false, enum: ClientType, description: 'Filtrer par type de client' })
+  @ApiQuery({ name: 'statut', required: false, enum: ClientStatut, description: 'Filtrer par statut du client' })
+  @ApiResponse({ status: 200, description: 'Fichier Excel généré', content: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': { schema: { type: 'string', format: 'binary' } } } })
   async exportExcel(
     @Request() req: any,
     @Res() res: any,
@@ -126,7 +140,8 @@ export class ClientsController {
   }
 
   @Get('template')
-  @ApiOperation({ summary: 'Télécharger le template d\'import' })
+  @ApiOperation({ summary: 'Télécharger le template Excel pour import de clients' })
+  @ApiResponse({ status: 200, description: 'Fichier template.xlsx généré', content: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': { schema: { type: 'string', format: 'binary' } } } })
   async template(@Res() res: any) {
     const buffer = await this.exportClientsTemplate.execute();
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -138,7 +153,24 @@ export class ClientsController {
   }
 
   @Post('import')
-  @ApiOperation({ summary: 'Importer clients depuis Excel' })
+  @ApiOperation({ summary: 'Importer des clients depuis un fichier Excel (.xlsx)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Fichier Excel contenant les clients à importer',
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Fichier Excel (.xlsx)',
+        },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Clients importés avec succès' })
+  @ApiResponse({ status: 400, description: 'Format de fichier invalide' })
   @UseInterceptors(FileInterceptor('file'))
   async import(
     @UploadedFile() file: any,
@@ -155,7 +187,9 @@ export class ClientsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Récupérer un client' })
+  @ApiOperation({ summary: 'Récupérer un client par son ID' })
+  @ApiResponse({ status: 200, description: 'Client récupéré avec succès' })
+  @ApiResponse({ status: 404, description: 'Client non trouvé' })
   async findOne(
     @Param('id') id: string,
     @Request() req: any,
@@ -173,7 +207,9 @@ export class ClientsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Créer un client' })
+  @ApiOperation({ summary: 'Créer un nouveau client' })
+  @ApiResponse({ status: 201, description: 'Client créé avec succès' })
+  @ApiResponse({ status: 400, description: 'Données invalides' })
   async create(
     @Body() dto: CreateClientDto,
     @Request() req: any,
@@ -193,7 +229,9 @@ export class ClientsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Modifier un client' })
+  @ApiOperation({ summary: 'Modifier les informations d\'un client' })
+  @ApiResponse({ status: 200, description: 'Client mis à jour avec succès' })
+  @ApiResponse({ status: 404, description: 'Client non trouvé' })
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateClientDto,
@@ -215,7 +253,10 @@ export class ClientsController {
 
   @Delete(':id')
   @Roles(Role.DIRECTEUR)
-  @ApiOperation({ summary: 'Supprimer un client' })
+  @ApiOperation({ summary: 'Supprimer un client (réservé au Directeur)' })
+  @ApiResponse({ status: 200, description: 'Client supprimé avec succès' })
+  @ApiResponse({ status: 403, description: 'Accès refusé - Réservé au Directeur' })
+  @ApiResponse({ status: 404, description: 'Client non trouvé' })
   async remove(
     @Param('id') id: string,
     @Request() req: any,

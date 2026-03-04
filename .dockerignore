@@ -1,0 +1,39 @@
+# Dependencies
+node_modules
+node_modules/*
+
+# Build outputs
+dist
+build
+
+# Test files
+test
+*.test.ts
+*.spec.ts
+
+# Development files
+.git
+.gitignore
+.vscode
+*.md
+*.log
+npm-debug.log*
+
+# Environment files (keep .env.example if needed)
+.env
+.env.*
+
+# IDE
+.idea
+
+# Temporary files
+tmp
+temp
+
+# Database
+*.sqlite
+*.sqlite3
+
+# Excel test files
+*.xlsx
+!template_clients.xlsx
