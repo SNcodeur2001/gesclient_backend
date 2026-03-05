@@ -1,20 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { PaiementRepository } from '../../../domain/ports/repositories/paiement.repository';
-import { Paiement } from '../../../domain/entities/paiement.entity';
-import { PaiementType } from '../../../domain/enums/paiement-type.enum';
-import { ModePaiement } from '../../../domain/enums/mode-paiement.enum';
+import { PaiementRepository } from
+  '../../../domain/ports/repositories/paiement.repository';
+import { Paiement } from
+  '../../../domain/entities/paiement.entity';
+import { PaiementType } from
+  '../../../domain/enums/paiement-type.enum';
+import { ModePaiement } from
+  '../../../domain/enums/mode-paiement.enum';
 
 @Injectable()
-export class PrismaPaiementRepository implements PaiementRepository {
+export class PrismaPaiementRepository
+  implements PaiementRepository {
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(
     data: Omit<Paiement, 'id' | 'createdAt'>,
   ): Promise<Paiement> {
-    const raw = await this.prisma.paiement.create({
-      data,
-    });
+    const raw = await this.prisma.paiement.create({ data });
     return this.toDomain(raw);
   }
 

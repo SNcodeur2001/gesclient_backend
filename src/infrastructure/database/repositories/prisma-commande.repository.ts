@@ -1,21 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { CommandeRepository } from '../../../domain/ports/repositories/commande.repository';
-import { Commande } from '../../../domain/entities/commande.entity';
-import { CommandeStatut } from '../../../domain/enums/commande-statut.enum';
-import { CommandeType } from '../../../domain/enums/commande-type.enum';
+import { CommandeRepository, CreateCommandeData } from
+  '../../../domain/ports/repositories/commande.repository';
+import { Commande } from
+  '../../../domain/entities/commande.entity';
+import { CommandeStatut } from
+  '../../../domain/enums/commande-statut.enum';
+import { CommandeType } from
+  '../../../domain/enums/commande-type.enum';
 
 @Injectable()
-export class PrismaCommandeRepository implements CommandeRepository {
+export class PrismaCommandeRepository
+  implements CommandeRepository {
+
   constructor(private readonly prisma: PrismaService) {}
 
   async findById(id: string): Promise<Commande | null> {
     const raw = await this.prisma.commande.findUnique({
       where: { id },
       include: {
-        paiements: true,
         acheteur: true,
         commercial: true,
+        paiements: { orderBy: { createdAt: 'asc' } },
       },
     });
     return raw ? this.toDomain(raw) : null;
@@ -39,51 +45,53 @@ export class PrismaCommandeRepository implements CommandeRepository {
     };
   }> {
     const where: any = {};
-
-    if (filters.commercialId) {
+    if (filters.commercialId)
       where.commercialId = filters.commercialId;
-    }
-    if (filters.statut) {
-      where.statut = filters.statut;
-    }
-    if (filters.type) {
-      where.type = filters.type;
-    }
+    if (filters.statut) where.statut = filters.statut;
+    if (filters.type) where.type = filters.type;
     if (filters.dateDebut || filters.dateFin) {
       where.createdAt = {};
-      if (filters.dateDebut) {
+      if (filters.dateDebut)
         where.createdAt.gte = filters.dateDebut;
-      }
-      if (filters.dateFin) {
+      if (filters.dateFin)
         where.createdAt.lte = filters.dateFin;
-      }
     }
+
+    const now = new Date();
+    const debutMois = new Date(
+      now.getFullYear(), now.getMonth(), 1,
+    );
 
     const skip = (filters.page - 1) * filters.limit;
 
-    // Execute main query and stats in parallel
-    const [items, total, stats] = await Promise.all([
-      this.prisma.commande.findMany({
-        where,
-        include: {
-          acheteur: true,
-          commercial: true,
-        },
-        skip,
-        take: filters.limit,
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.commande.count({ where }),
-      // Stats queries in parallel
-      Promise.all([
-        this.prisma.commande.aggregate({
+    const [raws, total, caAgg, enCours, enAttente] =
+      await Promise.all([
+        this.prisma.commande.findMany({
           where,
+          include: {
+            acheteur: true,
+            commercial: true,
+            paiements: true,
+          },
+          skip,
+          take: filters.limit,
+          orderBy: { createdAt: 'desc' },
+        }),
+        this.prisma.commande.count({ where }),
+        this.prisma.commande.aggregate({
+          where: {
+            ...where,
+            statut: CommandeStatut.FINALISEE,
+            createdAt: { gte: debutMois },
+          },
           _sum: { montantTTC: true },
         }),
         this.prisma.commande.count({
           where: {
             ...where,
-            statut: { in: [CommandeStatut.EN_PREPARATION, CommandeStatut.PRETE] },
+            statut: {
+              notIn: [CommandeStatut.FINALISEE],
+            },
           },
         }),
         this.prisma.commande.count({
@@ -92,34 +100,33 @@ export class PrismaCommandeRepository implements CommandeRepository {
             statut: CommandeStatut.EN_ATTENTE_ACOMPTE,
           },
         }),
-      ]),
-    ]);
+      ]);
 
     return {
-      items: items.map(this.toDomain),
+      items: raws.map(r => this.toDomain(r)),
       total,
       stats: {
-        chiffreAffaires: stats[0]._sum.montantTTC || 0,
-        commandesEnCours: stats[1],
-        enAttenteAcompte: stats[2],
+        chiffreAffaires: caAgg._sum.montantTTC || 0,
+        commandesEnCours: enCours,
+        enAttenteAcompte: enAttente,
       },
     };
   }
 
   async create(
-    data: Omit<Commande, 'id' | 'createdAt'>,
+    data: CreateCommandeData,
   ): Promise<Commande> {
     const raw = await this.prisma.commande.create({
       data,
-      include: {
-        acheteur: true,
-        commercial: true,
-      },
+      include: { acheteur: true, commercial: true },
     });
     return this.toDomain(raw);
   }
 
-  async update(id: string, data: Partial<Commande>): Promise<Commande> {
+  async update(
+    id: string,
+    data: Partial<Commande>,
+  ): Promise<Commande> {
     const raw = await this.prisma.commande.update({
       where: { id },
       data,
@@ -154,6 +161,10 @@ export class PrismaCommandeRepository implements CommandeRepository {
     commande.soldeRestant = raw.soldeRestant;
     commande.commercialId = raw.commercialId;
     commande.createdAt = raw.createdAt;
+    // Relations enrichies
+    (commande as any).acheteur = raw.acheteur;
+    (commande as any).commercial = raw.commercial;
+    (commande as any).paiements = raw.paiements;
     return commande;
   }
 }

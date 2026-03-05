@@ -4,6 +4,23 @@ import { CommandeType } from '../../enums/commande-type.enum';
 
 export const COMMANDE_REPOSITORY = 'COMMANDE_REPOSITORY';
 
+export interface CreateCommandeData {
+  reference: string;
+  type: CommandeType;
+  statut: CommandeStatut;
+  acheteurId: string;
+  produit: string;
+  quantite: number;
+  prixUnitaire: number;
+  montantHT: number;
+  tva: number;
+  montantTTC: number;
+  acompteMinimum: number | null;
+  acompteVerse: number;
+  soldeRestant: number;
+  commercialId: string;
+}
+
 export interface CommandeRepository {
   findById(id: string): Promise<Commande | null>;
   findAll(filters: {
@@ -24,7 +41,7 @@ export interface CommandeRepository {
     };
   }>;
   create(
-    data: Omit<Commande, 'id' | 'createdAt'>,
+    data: CreateCommandeData,
   ): Promise<Commande>;
   update(id: string, data: Partial<Commande>): Promise<Commande>;
   countAll(): Promise<number>;

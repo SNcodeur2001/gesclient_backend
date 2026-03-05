@@ -6,6 +6,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './presentation/auth/auth.module';
 import { ClientsModule } from './presentation/clients/clients.module';
+import { CollectesModule } from './presentation/collectes/collectes.module';
+import { CommandesModule } from './presentation/commandes/commandes.module';
 
 @Module({
   imports: [
@@ -19,7 +21,9 @@ import { ClientsModule } from './presentation/clients/clients.module';
     }]),
     PrismaModule,
     AuthModule,
-    ClientsModule
+    ClientsModule,
+    CollectesModule,
+    CommandesModule
     // Les modules Presentation seront ajoutés
     // au fur et à mesure
   ],
