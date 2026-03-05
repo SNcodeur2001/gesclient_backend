@@ -8,6 +8,7 @@ import { AuthModule } from './presentation/auth/auth.module';
 import { ClientsModule } from './presentation/clients/clients.module';
 import { CollectesModule } from './presentation/collectes/collectes.module';
 import { CommandesModule } from './presentation/commandes/commandes.module';
+import { StatsModule } from './presentation/stats/stats.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { CommandesModule } from './presentation/commandes/commandes.module';
     AuthModule,
     ClientsModule,
     CollectesModule,
-    CommandesModule
+    CommandesModule,
+    StatsModule
     // Les modules Presentation seront ajoutés
     // au fur et à mesure
   ],
