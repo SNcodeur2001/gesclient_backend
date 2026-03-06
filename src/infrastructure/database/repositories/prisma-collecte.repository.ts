@@ -36,6 +36,7 @@ export class PrismaCollecteRepository
   }
 
   async findAll(filters: {
+    search?: string;
     collecteurId?: string;
     apporteurId?: string;
     dateDebut?: Date;
@@ -49,6 +50,11 @@ export class PrismaCollecteRepository
     montantTotal: number;
   }> {
     const where: any = {};
+    if (filters.search) {
+      where.apporteur = {
+        nom: { contains: filters.search, mode: 'insensitive' },
+      };
+    }
     if (filters.collecteurId)
       where.collecteurId = filters.collecteurId;
     if (filters.apporteurId)

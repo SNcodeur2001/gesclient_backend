@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiTags, ApiBearerAuth,
-  ApiOperation, ApiResponse,
+  ApiOperation, ApiResponse, ApiQuery,
 } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from
@@ -34,6 +34,10 @@ import { CreatePaiementDto } from
   './dto/create-paiement.dto';
 import { ChangeStatutDto } from
   './dto/change-statut.dto';
+import { CommandeStatut } from
+  '../../domain/enums/commande-statut.enum';
+import { CommandeType } from
+  '../../domain/enums/commande-type.enum';
 
 @ApiTags('Commandes')
 @ApiBearerAuth()
@@ -65,16 +69,33 @@ export class CommandesController {
 
   @Get()
   @Roles(Role.COMMERCIAL, Role.DIRECTEUR)
-  @ApiOperation({ summary: 'Lister les commandes' })
+  @ApiOperation({ summary: 'Lister les commandes avec pagination et filtres' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Numéro de page (défaut: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Nombre de résultats par page (défaut: 10)' })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Rechercher par référence ou produit' })
+  @ApiQuery({ name: 'statut', required: false, enum: CommandeStatut, description: 'Filtrer par statut' })
+  @ApiQuery({ name: 'type', required: false, enum: CommandeType, description: 'Filtrer par type' })
+  @ApiQuery({ name: 'dateDebut', required: false, type: String, description: 'Date de début (format: YYYY-MM-DD)' })
+  @ApiQuery({ name: 'dateFin', required: false, type: String, description: 'Date de fin (format: YYYY-MM-DD)' })
   async findAll(
     @Query('page') page = 1,
     @Query('limit') limit = 10,
+    @Query('search') search?: string,
+    @Query('statut') statut?: CommandeStatut,
+    @Query('type') type?: CommandeType,
+    @Query('dateDebut') dateDebut?: string,
+    @Query('dateFin') dateFin?: string,
     @Request() req?: any,
   ) {
     const result = await this.getCommandes.execute(
       {
         page: +page,
         limit: +limit,
+        search,
+        statut,
+        type,
+        dateDebut: dateDebut ? new Date(dateDebut) : undefined,
+        dateFin: dateFin ? new Date(dateFin) : undefined,
       },
       req.user.role,
       req.user.id,

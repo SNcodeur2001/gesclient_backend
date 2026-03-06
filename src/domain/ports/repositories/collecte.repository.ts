@@ -8,6 +8,7 @@ export interface CollecteRepository {
     data: Omit<Collecte, 'id' | 'createdAt'>,
   ): Promise<Collecte>;
   findAll(filters: {
+    search?: string;
     collecteurId?: string;
     apporteurId?: string;
     dateDebut?: Date;

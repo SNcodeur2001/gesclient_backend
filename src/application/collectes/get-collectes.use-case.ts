@@ -5,6 +5,15 @@ import {
 } from '../../domain/ports/repositories/collecte.repository';
 import { Role } from '../../domain/enums/role.enum';
 
+export interface GetCollectesInput {
+  page: number;
+  limit: number;
+  search?: string;
+  apporteurId?: string;
+  dateDebut?: Date;
+  dateFin?: Date;
+}
+
 @Injectable()
 export class GetCollectesUseCase {
   constructor(
@@ -13,13 +22,7 @@ export class GetCollectesUseCase {
   ) {}
 
   async execute(
-    filters: {
-      apporteurId?: string;
-      dateDebut?: Date;
-      dateFin?: Date;
-      page: number;
-      limit: number;
-    },
+    filters: GetCollectesInput,
     userRole: Role,
     userId: string,
   ) {

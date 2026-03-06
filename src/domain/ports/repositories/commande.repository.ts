@@ -24,6 +24,7 @@ export interface CreateCommandeData {
 export interface CommandeRepository {
   findById(id: string): Promise<Commande | null>;
   findAll(filters: {
+    search?: string;
     commercialId?: string;
     statut?: CommandeStatut;
     type?: CommandeType;

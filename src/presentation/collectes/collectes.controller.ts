@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiTags, ApiBearerAuth,
-  ApiOperation, ApiResponse,
+  ApiOperation, ApiResponse, ApiQuery,
 } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from
@@ -58,16 +58,27 @@ export class CollectesController {
 
   @Get()
   @Roles(Role.COLLECTEUR, Role.DIRECTEUR)
-  @ApiOperation({ summary: 'Lister les collectes' })
+  @ApiOperation({ summary: 'Lister les collectes avec pagination et filtres' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Numéro de page (défaut: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Nombre de résultats par page (défaut: 10)' })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Rechercher par nom d\'apporteur' })
+  @ApiQuery({ name: 'dateDebut', required: false, type: String, description: 'Date de début (format: YYYY-MM-DD)' })
+  @ApiQuery({ name: 'dateFin', required: false, type: String, description: 'Date de fin (format: YYYY-MM-DD)' })
   async findAll(
     @Query('page') page = 1,
     @Query('limit') limit = 10,
+    @Query('search') search?: string,
+    @Query('dateDebut') dateDebut?: string,
+    @Query('dateFin') dateFin?: string,
     @Request() req?: any,
   ) {
     const result = await this.getCollectes.execute(
       {
         page: +page,
         limit: +limit,
+        search,
+        dateDebut: dateDebut ? new Date(dateDebut) : undefined,
+        dateFin: dateFin ? new Date(dateFin) : undefined,
       },
       req.user.role,
       req.user.id,

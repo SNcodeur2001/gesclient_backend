@@ -9,6 +9,16 @@ import { CommandeStatut } from
 import { CommandeType } from
   '../../domain/enums/commande-type.enum';
 
+export interface GetCommandesInput {
+  page: number;
+  limit: number;
+  search?: string;
+  statut?: CommandeStatut;
+  type?: CommandeType;
+  dateDebut?: Date;
+  dateFin?: Date;
+}
+
 @Injectable()
 export class GetCommandesUseCase {
   constructor(
@@ -17,14 +27,7 @@ export class GetCommandesUseCase {
   ) {}
 
   async execute(
-    filters: {
-      statut?: CommandeStatut;
-      type?: CommandeType;
-      dateDebut?: Date;
-      dateFin?: Date;
-      page: number;
-      limit: number;
-    },
+    filters: GetCommandesInput,
     userRole: Role,
     userId: string,
   ) {

@@ -28,6 +28,7 @@ export class PrismaCommandeRepository
   }
 
   async findAll(filters: {
+    search?: string;
     commercialId?: string;
     statut?: CommandeStatut;
     type?: CommandeType;
@@ -45,6 +46,12 @@ export class PrismaCommandeRepository
     };
   }> {
     const where: any = {};
+    if (filters.search) {
+      where.OR = [
+        { reference: { contains: filters.search, mode: 'insensitive' } },
+        { produit: { contains: filters.search, mode: 'insensitive' } },
+      ];
+    }
     if (filters.commercialId)
       where.commercialId = filters.commercialId;
     if (filters.statut) where.statut = filters.statut;
