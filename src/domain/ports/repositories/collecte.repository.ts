@@ -3,6 +3,7 @@ import { Collecte } from '../../entities/collecte.entity';
 export const COLLECTE_REPOSITORY = 'COLLECTE_REPOSITORY';
 
 export interface CollecteRepository {
+  findById(id: string): Promise<Collecte | null>;
   create(
     data: Omit<Collecte, 'id' | 'createdAt'>,
   ): Promise<Collecte>;

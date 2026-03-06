@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Body,
-  Query, Request, UseGuards,
+  Param, Query, Request, UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags, ApiBearerAuth,
@@ -20,6 +20,8 @@ import { CreateCollecteUseCase } from
   '../../application/collectes/create-collecte.use-case';
 import { GetCollectesUseCase } from
   '../../application/collectes/get-collectes.use-case';
+import { GetCollecteByIdUseCase } from
+  '../../application/collectes/get-collecte-by-id.use-case';
 import { GetCollectesStatsUseCase } from
   '../../application/collectes/get-collectes-stats.use-case';
 
@@ -34,6 +36,7 @@ export class CollectesController {
   constructor(
     private readonly createCollecte: CreateCollecteUseCase,
     private readonly getCollectes: GetCollectesUseCase,
+    private readonly getCollecteById: GetCollecteByIdUseCase,
     private readonly getStats: GetCollectesStatsUseCase,
   ) {}
 
@@ -59,23 +62,32 @@ export class CollectesController {
   async findAll(
     @Query('page') page = 1,
     @Query('limit') limit = 10,
-    @Query('apporteurId') apporteurId?: string,
-    @Query('dateDebut') dateDebut?: string,
-    @Query('dateFin') dateFin?: string,
     @Request() req?: any,
   ) {
     const result = await this.getCollectes.execute(
       {
         page: +page,
         limit: +limit,
-        apporteurId,
-        dateDebut: dateDebut ? new Date(dateDebut) : undefined,
-        dateFin: dateFin ? new Date(dateFin) : undefined,
       },
       req.user.role,
       req.user.id,
     );
     return { success: true, data: result };
+  }
+
+  @Get(':id')
+  @Roles(Role.COLLECTEUR, Role.DIRECTEUR)
+  @ApiOperation({ summary: 'Détail d\'une collecte' })
+  async findOne(
+    @Param('id') id: string,
+    @Request() req: any,
+  ) {
+    const collecte = await this.getCollecteById.execute(
+      id,
+      req.user.role,
+      req.user.id,
+    );
+    return { success: true, data: collecte };
   }
 
   @Get('stats')

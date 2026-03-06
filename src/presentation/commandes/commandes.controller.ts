@@ -25,6 +25,8 @@ import { ChangeStatutUseCase } from
   '../../application/commandes/change-statut.use-case';
 import { GetCommandesUseCase } from
   '../../application/commandes/get-commandes.use-case';
+import { GetCommandeByIdUseCase } from
+  '../../application/commandes/get-commande-by-id.use-case';
 
 import { CreateCommandeDto } from
   './dto/create-commande.dto';
@@ -32,10 +34,6 @@ import { CreatePaiementDto } from
   './dto/create-paiement.dto';
 import { ChangeStatutDto } from
   './dto/change-statut.dto';
-import { CommandeStatut } from
-  '../../domain/enums/commande-statut.enum';
-import { CommandeType } from
-  '../../domain/enums/commande-type.enum';
 
 @ApiTags('Commandes')
 @ApiBearerAuth()
@@ -47,6 +45,7 @@ export class CommandesController {
     private readonly addPaiementUseCase: AddPaiementUseCase,
     private readonly changeStatut: ChangeStatutUseCase,
     private readonly getCommandes: GetCommandesUseCase,
+    private readonly getCommandeById: GetCommandeByIdUseCase,
   ) {}
 
   @Post()
@@ -70,25 +69,32 @@ export class CommandesController {
   async findAll(
     @Query('page') page = 1,
     @Query('limit') limit = 10,
-    @Query('statut') statut?: CommandeStatut,
-    @Query('type') type?: CommandeType,
-    @Query('dateDebut') dateDebut?: string,
-    @Query('dateFin') dateFin?: string,
     @Request() req?: any,
   ) {
     const result = await this.getCommandes.execute(
       {
         page: +page,
         limit: +limit,
-        statut,
-        type,
-        dateDebut: dateDebut ? new Date(dateDebut) : undefined,
-        dateFin: dateFin ? new Date(dateFin) : undefined,
       },
       req.user.role,
       req.user.id,
     );
     return { success: true, data: result };
+  }
+
+  @Get(':id')
+  @Roles(Role.COMMERCIAL, Role.DIRECTEUR)
+  @ApiOperation({ summary: 'Détail d\'une commande' })
+  async findOne(
+    @Param('id') id: string,
+    @Request() req: any,
+  ) {
+    const commande = await this.getCommandeById.execute(
+      id,
+      req.user.role,
+      req.user.id,
+    );
+    return { success: true, data: commande };
   }
 
   @Post(':id/paiements')

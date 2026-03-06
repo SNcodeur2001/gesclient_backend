@@ -11,6 +11,17 @@ export class PrismaCollecteRepository
 
   constructor(private readonly prisma: PrismaService) {}
 
+  async findById(id: string): Promise<Collecte | null> {
+    const raw = await this.prisma.collecte.findUnique({
+      where: { id },
+      include: {
+        apporteur: true,
+        collecteur: true,
+      },
+    });
+    return raw ? this.toDomain(raw) : null;
+  }
+
   async create(
     data: Omit<Collecte, 'id' | 'createdAt'>,
   ): Promise<Collecte> {

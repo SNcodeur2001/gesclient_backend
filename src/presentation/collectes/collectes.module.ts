@@ -6,6 +6,8 @@ import { CreateCollecteUseCase } from
   '../../application/collectes/create-collecte.use-case';
 import { GetCollectesUseCase } from
   '../../application/collectes/get-collectes.use-case';
+import { GetCollecteByIdUseCase } from
+  '../../application/collectes/get-collecte-by-id.use-case';
 import { GetCollectesStatsUseCase } from
   '../../application/collectes/get-collectes-stats.use-case';
 
@@ -35,6 +37,7 @@ import { AuthModule } from '../auth/auth.module';
   providers: [
     CreateCollecteUseCase,
     GetCollectesUseCase,
+    GetCollecteByIdUseCase,
     GetCollectesStatsUseCase,
     { provide: COLLECTE_REPOSITORY,
       useClass: PrismaCollecteRepository },

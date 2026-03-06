@@ -10,6 +10,8 @@ import { ChangeStatutUseCase } from
   '../../application/commandes/change-statut.use-case';
 import { GetCommandesUseCase } from
   '../../application/commandes/get-commandes.use-case';
+import { GetCommandeByIdUseCase } from
+  '../../application/commandes/get-commande-by-id.use-case';
 
 import { PrismaCommandeRepository } from
   '../../infrastructure/database/repositories/prisma-commande.repository';
@@ -43,6 +45,7 @@ import { AuthModule } from '../auth/auth.module';
     AddPaiementUseCase,
     ChangeStatutUseCase,
     GetCommandesUseCase,
+    GetCommandeByIdUseCase,
     { provide: COMMANDE_REPOSITORY,
       useClass: PrismaCommandeRepository },
     { provide: PAIEMENT_REPOSITORY,
