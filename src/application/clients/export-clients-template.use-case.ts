@@ -12,6 +12,8 @@ export class ExportClientsTemplateUseCase {
         Email: '',
         Téléphone: '',
         Adresse: '',
+        Type: '',
+        Statut: '',
       },
     ];
 
@@ -25,6 +27,8 @@ export class ExportClientsTemplateUseCase {
       { wch: 30 }, // Email
       { wch: 20 }, // Téléphone
       { wch: 30 }, // Adresse
+      { wch: 15 }, // Type
+      { wch: 15 }, // Statut
     ];
 
     const workbook = XLSX.utils.book_new();

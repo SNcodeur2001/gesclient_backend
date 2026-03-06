@@ -87,6 +87,26 @@ export class ImportClientsUseCase {
         continue;
       }
 
+      // Valider le type si fourni
+      const typeImport = row.type || row.Type;
+      let clientType = type;
+      if (typeImport) {
+        const typeUpper = typeImport.toString().toUpperCase().trim();
+        if (typeUpper === 'APPORTEUR' || typeUpper === 'ACHETEUR') {
+          clientType = ClientType[typeUpper as keyof typeof ClientType];
+        }
+      }
+
+      // Valider le statut si fourni
+      const statutImport = row.statut || row.Statut;
+      let clientStatut = ClientStatut.PROSPECT;
+      if (statutImport) {
+        const statutUpper = statutImport.toString().toUpperCase().trim();
+        if (statutUpper === 'ACTIF' || statutUpper === 'PROSPECT' || statutUpper === 'INACTIF') {
+          clientStatut = ClientStatut[statutUpper as keyof typeof ClientStatut];
+        }
+      }
+
       if (email) {
         const existing = await this.clientRepo.findByEmail(
           email,
@@ -107,8 +127,8 @@ export class ImportClientsUseCase {
         telephone:
           row.telephone || row.Telephone || null,
         adresse: row.adresse || row.Adresse || null,
-        type,
-        statut: ClientStatut.PROSPECT,
+        type: clientType,
+        statut: clientStatut,
         totalRevenue: 0,
       });
     }

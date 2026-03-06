@@ -9,6 +9,8 @@ import { ClientsModule } from './presentation/clients/clients.module';
 import { CollectesModule } from './presentation/collectes/collectes.module';
 import { CommandesModule } from './presentation/commandes/commandes.module';
 import { StatsModule } from './presentation/stats/stats.module';
+import { NotificationsModule } from './presentation/notifications/notifications.module';
+import { AuditModule } from './presentation/audit/audit.module';
 
 @Module({
   imports: [
@@ -25,7 +27,9 @@ import { StatsModule } from './presentation/stats/stats.module';
     ClientsModule,
     CollectesModule,
     CommandesModule,
-    StatsModule
+    StatsModule,
+    NotificationsModule,
+    AuditModule,
     // Les modules Presentation seront ajoutés
     // au fur et à mesure
   ],
