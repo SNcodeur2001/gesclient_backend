@@ -34,6 +34,28 @@ temp
 *.sqlite
 *.sqlite3
 
-# Excel test files
+# Excel test files (personal)
 *.xlsx
 !template_clients.xlsx
+
+# Personal documentation & analysis files
+*.md
+DIAGRAMMES.md
+DOCUMENTATION_COMPLETE.md
+PROMPT_VISILY.md
+TESTING_GUIDE.md
+TEST_PYRAMID_STATUS.md
+E2E_TESTS_SETUP.md
+SQLITE_VS_POSTGRESQL_TESTS.md
+CI_CD_ANALYSIS.md
+GITHUB_BRANCH_PROTECTION.md
+GITOPS_RENDER_ANALYSIS.md
+
+# Text files
+*.txt
+ajouter.txt
+A_ajouter.txt
+description_projet.txt
+
+# Diagram files
+diagrammes_*.txt

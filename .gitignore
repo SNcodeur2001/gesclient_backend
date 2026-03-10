@@ -54,3 +54,27 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# ============================================
+# Personal/Project-specific files (ignored)
+# ============================================
+
+# Documentation files (personal notes)
+*.md
+!README.md
+
+# Text files
+*.txt
+ajouter.txt
+A_ajouter.txt
+description_projet.txt
+
+# Excel test data files
+*.xlsx
+!template_clients.xlsx
+
+# Diagram files
+diagrammes_*.txt
+
+# Plans directory (personal)
+plans/
