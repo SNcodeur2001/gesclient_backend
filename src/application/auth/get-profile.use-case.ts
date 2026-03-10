@@ -1,8 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { USER_REPOSITORY } from '../../domain/ports/repositories/user.repository';
 import type { UserRepository } from '../../domain/ports/repositories/user.repository';
-import { InvalidCredentialsException } from
-  '../../domain/exceptions/invalid-credentials.exception';
+import { InvalidCredentialsException } from '../../domain/exceptions/invalid-credentials.exception';
 import { User } from '../../domain/entities/user.entity';
 
 @Injectable()
@@ -17,6 +16,7 @@ export class GetProfileUseCase {
     if (!user) {
       throw new InvalidCredentialsException();
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userSafe } = user;
     return userSafe;
   }

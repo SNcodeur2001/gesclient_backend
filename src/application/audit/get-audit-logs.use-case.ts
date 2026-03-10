@@ -1,8 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import {
-  AuditLogRepository,
-  AUDIT_LOG_REPOSITORY,
-} from '../../domain/ports/repositories/audit-log.repository';
+import { AUDIT_LOG_REPOSITORY } from '../../domain/ports/repositories/audit-log.repository';
 import type { AuditLogRepository as AuditLogRepositoryType } from '../../domain/ports/repositories/audit-log.repository';
 import { AuditAction } from '../../domain/enums/audit-action.enum';
 import { AuditLog } from '../../domain/entities/audit-log.entity';

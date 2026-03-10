@@ -86,8 +86,9 @@ describe('LoginUseCase', () => {
     userRepo.findByEmail.mockResolvedValue(null);
 
     // Act & Assert
-    await expect(useCase.execute('unknown@proplast.sn', 'password123'))
-      .rejects.toThrow(InvalidCredentialsException);
+    await expect(
+      useCase.execute('unknown@proplast.sn', 'password123'),
+    ).rejects.toThrow(InvalidCredentialsException);
   });
 
   it('devrait lancer InvalidCredentialsException si mot de passe incorrect', async () => {
@@ -96,7 +97,8 @@ describe('LoginUseCase', () => {
     hashService.compare.mockResolvedValue(false);
 
     // Act & Assert
-    await expect(useCase.execute('test@proplast.sn', 'wrong_password'))
-      .rejects.toThrow(InvalidCredentialsException);
+    await expect(
+      useCase.execute('test@proplast.sn', 'wrong_password'),
+    ).rejects.toThrow(InvalidCredentialsException);
   });
 });
