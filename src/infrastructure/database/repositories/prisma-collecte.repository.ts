@@ -23,10 +23,23 @@ export class PrismaCollecteRepository
   }
 
   async create(
-    data: Omit<Collecte, 'id' | 'createdAt'>,
+    data: any,
   ): Promise<Collecte> {
+    // Préparer les données pour PrisNote: The database schema already includes CommandeItem and CollecteItem tables to support multiple products per order in the future, but the current implementation uses single product orders. If you want to implement multiple products per order feature, let me know and I can proceed with that.ma - transformer les items au format nested create
+    const prismaData: any = { ...data };
+    
+    if (data.items && data.items.length > 0) {
+      prismaData.items = {
+        create: data.items.map((item: any) => ({
+          typePlastique: item.typePlastique,
+          quantiteKg: item.quantiteKg,
+          prixUnitaire: item.prixUnitaire,
+        })),
+      };
+    }
+    
     const raw = await this.prisma.collecte.create({
-      data,
+      data: prismaData,
       include: {
         apporteur: true,
         collecteur: true,
@@ -165,7 +178,7 @@ export class PrismaCollecteRepository
       ).padStart(2, '0')}`;
       evolutionMap.set(
         key,
-        (evolutionMap.get(key) || 0) + c.quantiteKg,
+        (evolutionMap.get(key) || 0) + (c.quantiteKg || 0),
       );
     });
 

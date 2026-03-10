@@ -114,7 +114,7 @@ export class PrismaStatsRepository implements StatsRepository {
 
       // 6. En attente d'acompte
       this.prisma.commande.count({
-        where: { statut: CommandeStatut.EN_ATTENTE_ACOMPTE },
+        where: { statut: CommandeStatut.EN_PREPARATION },
       }),
 
       // 7. Total apporteurs
@@ -205,7 +205,7 @@ export class PrismaStatsRepository implements StatsRepository {
     for (const c of evolutionCollecteRaw) {
       const monthKey = `${c.createdAt.getFullYear()}-${String(c.createdAt.getMonth() + 1).padStart(2, '0')}`;
       const current = monthlyCollecteMap.get(monthKey) || 0;
-      monthlyCollecteMap.set(monthKey, current + c.quantiteKg);
+      monthlyCollecteMap.set(monthKey, current + (c.quantiteKg || 0));
     }
 
     for (const c of evolutionCA) {

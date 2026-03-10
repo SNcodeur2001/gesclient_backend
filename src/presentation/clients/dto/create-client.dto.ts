@@ -6,6 +6,8 @@ import { ApiProperty, ApiPropertyOptional } from
   '@nestjs/swagger';
 import { ClientType } from
   '../../../domain/enums/client-type.enum';
+import { ClientStatut } from
+  '../../../domain/enums/client-statut.enum';
 
 export class CreateClientDto {
   @ApiProperty({ example: 'Acme Corp' })
@@ -42,4 +44,9 @@ export class CreateClientDto {
   @IsOptional()
   @IsEnum(ClientType)
   type?: ClientType;
+
+  @ApiPropertyOptional({ enum: ClientStatut, example: 'ACTIF' })
+  @IsOptional()
+  @IsEnum(ClientStatut)
+  statut?: ClientStatut;
 }

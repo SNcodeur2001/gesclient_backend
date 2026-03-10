@@ -9,6 +9,7 @@ export class Commande {
   type!: CommandeType;
   statut!: CommandeStatut;
   acheteurId!: string;
+  // Ancien système - un seul produit (conservé pour compatibilité)
   produit!: string;
   quantite!: number;
   prixUnitaire!: number;
@@ -21,6 +22,26 @@ export class Commande {
   commercialId!: string;
   createdAt!: Date;
 
+  // Nouveau système - plusieurs produits
+  items?: Array<{
+    id: string;
+    produit: string;
+    quantite: number;
+    prixUnitaire: number;
+  }>;
+
+  /**
+   * Calcule le montant HT total à partir des items
+   */
+  static calculerMontantHT(
+    items: Array<{ quantite: number; prixUnitaire: number }>,
+  ): number {
+    return items.reduce((sum, item) => sum + (item.quantite * item.prixUnitaire), 0);
+  }
+
+  /**
+   * Calcule la TVA selon le type de commande
+   */
   static calculerTVA(
     montantHT: number,
     type: CommandeType,
@@ -30,6 +51,16 @@ export class Commande {
       : 0;
   }
 
+  /**
+   * Calcule le montant TTC
+   */
+  static calculerMontantTTC(montantHT: number, tva: number): number {
+    return montantHT + tva;
+  }
+
+  /**
+   * Calcule l'acompte minimum selon le type
+   */
   static calculerAcompteMinimum(
     montantTTC: number,
     type: CommandeType,
@@ -50,18 +81,22 @@ export class Commande {
     }
   }
 
-validerTransition(nouveauStatut: CommandeStatut): void {
-  const transitions: Partial<Record<CommandeStatut, CommandeStatut[]>> = {
-    [CommandeStatut.EN_PREPARATION]: [CommandeStatut.PRETE],
-  };
+  /**
+   * Valide la transition de statut
+   */
+  validerTransition(nouveauStatut: CommandeStatut): void {
+    const transitions: Partial<Record<CommandeStatut, CommandeStatut[]>> = {
+      [CommandeStatut.EN_PREPARATION]: [CommandeStatut.PRETE],
+      [CommandeStatut.PRETE]: [CommandeStatut.FINALISEE],
+    };
 
-  const autorisees = transitions[this.statut] ?? [];
-  if (!autorisees.includes(nouveauStatut)) {
-    throw new CommandeStatutInvalideException(
-      this.statut,
-      nouveauStatut,
-    );
+    const autorisees = transitions[this.statut] ?? [];
+    if (!autorisees.includes(nouveauStatut)) {
+      throw new CommandeStatutInvalideException(
+        this.statut,
+        nouveauStatut,
+      );
+    }
   }
-}
 
 }

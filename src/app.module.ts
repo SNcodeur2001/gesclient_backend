@@ -11,6 +11,7 @@ import { CommandesModule } from './presentation/commandes/commandes.module';
 import { StatsModule } from './presentation/stats/stats.module';
 import { NotificationsModule } from './presentation/notifications/notifications.module';
 import { AuditModule } from './presentation/audit/audit.module';
+import { FacturesModule } from './presentation/factures/factures.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AuditModule } from './presentation/audit/audit.module';
     StatsModule,
     NotificationsModule,
     AuditModule,
+    FacturesModule,
     // Les modules Presentation seront ajoutés
     // au fur et à mesure
   ],

@@ -71,6 +71,17 @@ enum ImportStatut {
   ERREUR
 }
 
+enum FactureType {
+  PROFORMA
+  DEFINITIVE
+}
+
+enum FactureStatut {
+  GENEREE
+  ENVOYEE
+  TELECHARGE
+}
+
 model User {
   id              String         @id @default(uuid())
   nom             String
@@ -89,6 +100,7 @@ model User {
   imports         Import[]
   paiements       Paiement[]
   refreshTokens   RefreshToken[]
+  facturesGenerees Facture[]
 }
 
 model Client {
@@ -116,13 +128,26 @@ model Collecte {
   id           String   @id @default(uuid())
   apporteurId  String
   apporteur    Client   @relation(fields: [apporteurId],references: [id])
-  quantiteKg   Float
-  prixUnitaire Float
-  montantTotal Float
+  // Ancien système - un seul type (conservé pour compatibilité)
+  quantiteKg   Float?
+  prixUnitaire Float?
+  montantTotal Float?
   notes        String?
   collecteurId String
   collecteur   User     @relation(fields: [collecteurId],references: [id])
+  // Nouveau système - plusieurs types
+  items        CollecteItem[]
   createdAt    DateTime @default(now())
+}
+
+model CollecteItem {
+  id            String   @id @default(uuid())
+  collecteId    String
+  collecte      Collecte @relation(fields: [collecteId], references: [id], onDelete: Cascade)
+  typePlastique String
+  quantiteKg    Float
+  prixUnitaire  Float
+  createdAt     DateTime @default(now())
 }
 
 model Commande {
@@ -132,9 +157,10 @@ model Commande {
   statut         CommandeStatut @default(EN_ATTENTE_ACOMPTE)
   acheteurId     String
   acheteur       Client         @relation(fields: [acheteurId],references: [id])
-  produit        String
-  quantite       Float
-  prixUnitaire   Float
+  // Ancien système - un seul produit (conservé pour compatibilité)
+  produit        String?
+  quantite       Float?
+  prixUnitaire   Float?
   montantHT      Float
   tva            Float          @default(0)
   montantTTC     Float
@@ -143,10 +169,23 @@ model Commande {
   soldeRestant   Float
   commercialId   String
   commercial     User           @relation(fields: [commercialId], references: [id])
+  // Nouveau système - plusieurs produits
+  items          CommandeItem[]
   paiements      Paiement[]
   notifications  Notification[]
+  factures       Facture[]
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+}
+
+model CommandeItem {
+  id           String   @id @default(uuid())
+  commandeId   String
+  commande     Commande @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+  produit      String
+  quantite     Float
+  prixUnitaire Float
+  createdAt    DateTime @default(now())
 }
 
 model Paiement {
@@ -159,6 +198,29 @@ model Paiement {
   valideParId  String
   validePar    User         @relation( fields: [valideParId],references: [id])
   createdAt    DateTime     @default(now())
+}
+
+model Facture {
+  id                String        @id @default(uuid())
+  numero            String        @unique
+  type              FactureType
+  commandeId        String
+  commande          Commande      @relation(fields: [commandeId], references: [id])
+  montantHT         Float
+  tva               Float
+  montantTTC        Float
+  fichierBlob       Bytes?        // PDF stocké en base
+  fichierPath       String?       // Chemin du fichier si stocké sur disque
+  statut            FactureStatut @default(GENEREE)
+  envoyeeWhatsApp   Boolean       @default(false)
+  dateEnvoiWhatsApp DateTime?
+  telephoneEnvoye   String?       // Numéro de téléphone du client envoyé
+  downloadToken     String?       // Token de téléchargement usage unique
+  downloadTokenExpiresAt DateTime? // Expiration du token
+  genereParId       String
+  generePar         User          @relation(fields: [genereParId], references: [id])
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 }
 
 model Import {

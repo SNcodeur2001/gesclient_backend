@@ -15,6 +15,10 @@ import type { AuditLogRepository } from '../../domain/ports/repositories/audit-l
 import {
   AUDIT_LOG_REPOSITORY,
 } from '../../domain/ports/repositories/audit-log.repository';
+import type { UserRepository } from '../../domain/ports/repositories/user.repository';
+import {
+  USER_REPOSITORY,
+} from '../../domain/ports/repositories/user.repository';
 import { Collecte } from
   '../../domain/entities/collecte.entity';
 import { ClientType } from
@@ -26,10 +30,22 @@ import { AuditAction } from
 import { NotificationType } from
   '../../domain/enums/notification-type.enum';
 
-export interface CreateCollecteInput {
-  apporteurId?: string;
+/**
+ * Input DTO pour un item de collecte
+ */
+export interface CollecteItemInput {
+  typePlastique: string;
   quantiteKg: number;
   prixUnitaire: number;
+}
+
+export interface CreateCollecteInput {
+  apporteurId?: string;
+  // Ancien système - un seul type
+  quantiteKg?: number;
+  prixUnitaire?: number;
+  // Nouveau système - plusieurs types
+  items?: CollecteItemInput[];
   notes?: string;
   apporteurInfo?: { nom: string; telephone?: string };
   collecteurId: string;
@@ -47,6 +63,8 @@ export class CreateCollecteUseCase {
     private readonly notifRepo: NotificationRepository,
     @Inject(AUDIT_LOG_REPOSITORY)
     private readonly auditRepo: AuditLogRepository,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepo: UserRepository,
   ) {}
 
   async execute(input: CreateCollecteInput): Promise<Collecte> {
@@ -65,20 +83,39 @@ export class CreateCollecteUseCase {
       apporteurId = apporteur.id;
     }
 
-    // Calcul montant
-    const montantTotal = Collecte.calculerMontant(
-      input.quantiteKg,
-      input.prixUnitaire,
-    );
+    // Déterminer les types de plastiques (nouveau système ou ancien)
+    let items: CollecteItemInput[] = [];
+    let quantiteKg: number | undefined;
+    let prixUnitaire: number | undefined;
+
+    if (input.items && input.items.length > 0) {
+      // Nouveau système: plusieurs types
+      items = input.items;
+    } else if (input.quantiteKg !== undefined && input.prixUnitaire !== undefined) {
+      // Ancien système: un seul type (backward compatibility)
+      quantiteKg = input.quantiteKg;
+      prixUnitaire = input.prixUnitaire;
+      items = [{ typePlastique: 'Plastique', quantiteKg, prixUnitaire }];
+    } else {
+      throw new Error('Veuillez fournir soit un type (quantiteKg, prixUnitaire) soit une liste de types (items)');
+    }
+
+    // Calcul montant total
+    let montantTotal = 0;
+    for (const item of items) {
+      montantTotal += item.quantiteKg * item.prixUnitaire;
+    }
 
     // Créer la collecte
     const collecte = await this.collecteRepo.create({
       apporteurId: apporteurId!,
-      quantiteKg: input.quantiteKg,
-      prixUnitaire: input.prixUnitaire,
+      quantiteKg: items.length === 1 ? items[0].quantiteKg : null,
+      prixUnitaire: items.length === 1 ? items[0].prixUnitaire : null,
       montantTotal,
       notes: input.notes,
       collecteurId: input.collecteurId,
+      // Les items seront créés via une relation
+      items: items as any,
     });
 
     // Audit
@@ -88,20 +125,25 @@ export class CreateCollecteUseCase {
       entite: 'Collecte',
       entiteId: collecte.id,
       nouvelleValeur: {
-        quantiteKg: input.quantiteKg,
         montantTotal,
+        itemsCount: items.length,
       },
     });
 
     // Notification directeur
-    if (input.directeurId) {
-      await this.notifRepo.create({
-        userId: input.directeurId,
-        type: NotificationType.NOUVELLE_COLLECTE,
-        message: `Nouvelle collecte : ${input.quantiteKg} kg `
-          + `pour ${montantTotal.toLocaleString()} FCFA`,
-        lien: `/collectes/${collecte.id}`,
-      });
+    try {
+      const directeur = await this.userRepo.findDirecteur();
+      if (directeur) {
+        await this.notifRepo.create({
+          userId: directeur.id,
+          type: NotificationType.NOUVELLE_COLLECTE,
+          message: `Nouvelle collecte : ${items.length} type(s) `
+            + `pour ${montantTotal.toLocaleString()} FCFA`,
+          lien: `/collectes/${collecte.id}`,
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors de la création de la notification:', error);
     }
 
     return collecte;

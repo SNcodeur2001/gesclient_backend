@@ -1,0 +1,176 @@
+**1. Directeur**
+
+```plantuml
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Directeur" as Directeur #gold
+
+rectangle "Gestion des Clients" {
+  (Consulter la liste des clients) as UC1
+  (Créer un client) as UC2
+  (Modifier un client) as UC3
+  (Supprimer un client) as UC4
+  (Exporter clients CSV/Excel) as UC5
+  (Importer clients Excel) as UC6
+}
+
+rectangle "Gestion des Commandes" {
+  (Voir toutes les commandes) as UC7
+  (Consulter détail commande) as UC8
+  (Générer facture proforma) as UC9
+  (Générer facture définitive) as UC10
+  (Envoyer facture WhatsApp) as UC11
+}
+
+rectangle "Gestion des Collectes" {
+  (Voir toutes les collectes) as UC12
+  (Consulter détail collecte) as UC13
+  (Voir statistiques collectes) as UC14
+}
+
+rectangle "Suivi et Reporting" {
+  (Voir dashboard) as UC15
+  (Consulter les audits) as UC16
+  (Voir les notifications) as UC17
+  (Marquer notification lue) as UC18
+}
+
+Directeur --> UC1
+Directeur --> UC2
+Directeur --> UC3
+Directeur --> UC4
+Directeur --> UC5
+Directeur --> UC6
+Directeur --> UC7
+Directeur --> UC8
+Directeur --> UC9
+Directeur --> UC10
+Directeur --> UC11
+Directeur --> UC12
+Directeur --> UC13
+Directeur --> UC14
+Directeur --> UC15
+Directeur --> UC16
+Directeur --> UC17
+Directeur --> UC18
+
+UC8 ..> UC7 : <<include>>
+UC9 ..> UC8 : <<include>>
+UC10 ..> UC8 : <<include>>
+UC11 ..> UC10 : <<include>>
+UC13 ..> UC12 : <<include>>
+UC18 ..> UC17 : <<include>>
+
+@enduml
+```
+
+---
+
+**2. Commercial**
+
+```plantuml
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Commercial" as Commercial #lightblue
+
+rectangle "Gestion des Clients" {
+  (Consulter mes clients) as UC1
+  (Créer un client) as UC2
+  (Modifier un client) as UC3
+  (Importer clients Excel) as UC4
+  (Exporter clients CSV/Excel) as UC5
+}
+
+rectangle "Gestion des Commandes" {
+  (Voir mes commandes) as UC6
+  (Consulter détail commande) as UC7
+  (Créer une commande) as UC8
+  (Sélectionner un acheteur) as UC9
+  (Créer un acheteur à la volée) as UC10
+  (Ajouter un paiement) as UC11
+  (Changer statut commande) as UC12
+}
+
+rectangle "Gestion des Factures" {
+  (Générer facture proforma) as UC13
+  (Générer facture définitive) as UC14
+  (Envoyer facture WhatsApp) as UC15
+}
+
+rectangle "Suivi" {
+  (Voir mes notifications) as UC16
+  (Marquer notification lue) as UC17
+}
+
+Commercial --> UC1
+Commercial --> UC2
+Commercial --> UC3
+Commercial --> UC4
+Commercial --> UC5
+Commercial --> UC6
+Commercial --> UC7
+Commercial --> UC8
+Commercial --> UC11
+Commercial --> UC12
+Commercial --> UC13
+Commercial --> UC14
+Commercial --> UC15
+Commercial --> UC16
+Commercial --> UC17
+
+UC8 ..> UC9 : <<include>>
+UC10 ..> UC8 : <<extend>>
+UC7 ..> UC6 : <<include>>
+UC11 ..> UC7 : <<include>>
+UC12 ..> UC7 : <<include>>
+UC13 ..> UC11 : <<extend>>
+UC14 ..> UC11 : <<extend>>
+UC15 ..> UC14 : <<include>>
+UC17 ..> UC16 : <<include>>
+
+@enduml
+```
+
+---
+
+**3. Collecteur** *(inchangé car déjà lisible)*
+
+```plantuml
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Collecteur" as Collecteur #lightgreen
+
+rectangle "Gestion des Collectes" {
+  (Créer une collecte) as UC1
+  (Sélectionner un apporteur) as UC2
+  (Créer un apporteur à la volée) as UC3
+  (Voir mes collectes) as UC4
+  (Consulter détail collecte) as UC5
+}
+
+rectangle "Suivi" {
+  (Voir statistiques collectes) as UC6
+  (Voir mes notifications) as UC7
+  (Marquer notification lue) as UC8
+}
+
+Collecteur --> UC1
+Collecteur --> UC4
+Collecteur --> UC5
+Collecteur --> UC6
+Collecteur --> UC7
+Collecteur --> UC8
+
+UC1 ..> UC2 : <<include>>
+UC3 ..> UC1 : <<extend>>
+UC5 ..> UC4 : <<include>>
+UC8 ..> UC7 : <<include>>
+
+@enduml
+```

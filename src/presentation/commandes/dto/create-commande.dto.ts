@@ -1,7 +1,7 @@
 import {
   IsEnum, IsOptional, IsUUID,
   IsNotEmpty, IsNumber, IsString, Min,
-  ValidateNested,
+  ValidateNested, IsArray, IsNotEmptyObject,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from
@@ -13,6 +13,26 @@ class AcheteurInfoDto {
   @ApiProperty() @IsString() nom!: string;
   @ApiPropertyOptional() @IsOptional() @IsString() email?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() telephone?: string;
+}
+
+/**
+ * Item de commande pour le nouveau système multi-produits
+ */
+export class CommandeItemDto {
+  @ApiProperty({ example: 'Granulés PEHD' })
+  @IsNotEmpty()
+  @IsString()
+  produit!: string;
+
+  @ApiProperty({ example: 500 })
+  @IsNumber()
+  @Min(1)
+  quantite!: number;
+
+  @ApiProperty({ example: 300 })
+  @IsNumber()
+  @Min(0)
+  prixUnitaire!: number;
 }
 
 export class CreateCommandeDto {
@@ -31,18 +51,34 @@ export class CreateCommandeDto {
   @Type(() => AcheteurInfoDto)
   acheteurInfo?: AcheteurInfoDto;
 
-  @ApiProperty({ example: 'Granulés PEHD' })
+  // =============================================
+  // Ancien système - un seul produit (pour compatibilité)
+  // =============================================
+  @ApiPropertyOptional({ example: 'Granulés PEHD' })
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
-  produit!: string;
+  produit?: string;
 
-  @ApiProperty({ example: 500 })
+  @ApiPropertyOptional({ example: 500 })
+  @IsOptional()
   @IsNumber()
   @Min(1)
-  quantite!: number;
+  quantite?: number;
 
-  @ApiProperty({ example: 300 })
+  @ApiPropertyOptional({ example: 300 })
+  @IsOptional()
   @IsNumber()
   @Min(0)
-  prixUnitaire!: number;
+  prixUnitaire?: number;
+
+  // =============================================
+  // Nouveau système - plusieurs produits
+  // =============================================
+  @ApiPropertyOptional({ type: [CommandeItemDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CommandeItemDto)
+  items?: CommandeItemDto[];
 }

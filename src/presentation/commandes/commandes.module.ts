@@ -34,11 +34,17 @@ import { NOTIFICATION_REPOSITORY } from
   '../../domain/ports/repositories/notification.repository';
 import { AUDIT_LOG_REPOSITORY } from
   '../../domain/ports/repositories/audit-log.repository';
+import { USER_REPOSITORY } from
+  '../../domain/ports/repositories/user.repository';
+import { PrismaUserRepository } from
+  '../../infrastructure/database/repositories/prisma-user.repository';
 
 import { AuthModule } from '../auth/auth.module';
+import { FacturesModule } from '../factures/factures.module';
+import { WhatsAppService } from '../../infrastructure/services/whatsapp.service';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, FacturesModule],
   controllers: [CommandesController],
   providers: [
     CreateCommandeUseCase,
@@ -56,6 +62,9 @@ import { AuthModule } from '../auth/auth.module';
       useClass: PrismaNotificationRepository },
     { provide: AUDIT_LOG_REPOSITORY,
       useClass: PrismaAuditLogRepository },
+    { provide: USER_REPOSITORY,
+      useClass: PrismaUserRepository },
+    WhatsAppService,
   ],
 })
 export class CommandesModule {}

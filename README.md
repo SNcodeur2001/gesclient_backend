@@ -1,99 +1,184 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <img src="https://nestjs.com/img/logo-small.svg" width="120" alt="NestJS Logo" />
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+<h1 align="center">GesClient Proplast - Backend API</h1>
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+<p align="center">
+  API REST de gestion opérationnelle pour une entreprise de collecte et vente de plastique
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+
+---
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+**GesClient** est une application backend développée avec **NestJS** pour la gestion opérationnelle d'une entreprise de collecte et vente de plastique (Proplast).
 
-## Project setup
+### Fonctionnalités principales
 
-```bash
-$ npm install
-```
+- **Gestion des Clients** : Apporteurs et Acheteurs avec import/export Excel
+- **Gestion des Commandes** : Création, suivi, paiements (acomptes/soldes)
+- **Gestion des Collectes** : Enregistrement des apports de plastiques
+- **Facturation** : Génération PDF automatique et envoi par WhatsApp
+- **Dashboard** : Statistiques globales pour le directeur
+- **Audit** : Traçabilité complète des actions
 
-## Compile and run the project
+### Technologies
 
-```bash
-# development
-$ npm run start
+| Technologie | Description |
+|-------------|-------------|
+| NestJS 11.x | Framework Node.js |
+| TypeScript 5.x | Langage |
+| PostgreSQL | Base de données |
+| Prisma 7.x | ORM |
+| JWT + Refresh Tokens | Authentification |
+| pdfmake | Génération PDF |
+| Meta WhatsApp API | Envoi de factures |
 
-# watch mode
-$ npm run start:dev
+---
 
-# production mode
-$ npm run start:prod
-```
+## Démarrage rapide
 
-## Run tests
+### Prérequis
 
-```bash
-# unit tests
-$ npm run test
+- Node.js 20+
+- PostgreSQL 14+
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Installation
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Installer les dépendances
+npm install
+
+# Générer le client Prisma
+npx prisma generate
+
+# Appliquer les migrations
+npx prisma migrate dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Configuration
 
-## Resources
+Créer un fichier `.env` :
 
-Check out a few resources that may come in handy when working with NestJS:
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/gesclient
+JWT_SECRET=votre_secret_jwt
+PORT=3000
+FRONTEND_URL=http://localhost:5173
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Lancement
 
-## Support
+```bash
+# Mode développement
+npm run start:dev
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Mode production
+npm run build
+npm run start:prod
+```
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Documentation
 
-## License
+| Fichier | Description |
+|---------|-------------|
+| `DOCUMENTATION_COMPLETE.md` | Documentation complète et détaillée |
+| `DIAGRAMMES.md` | Diagrammes UML (Use Case, Classes, Séquences) |
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
-# gesclient_backend
+### Swagger API
+
+Une fois l'application démarrée :
+- **UI Swagger** : http://localhost:3000/api/docs
+- **JSON OpenAPI** : http://localhost:3000/api/docs-json
+
+### Identifiants de test
+
+| Rôle | Email | Mot de passe |
+|------|-------|--------------|
+| Directeur | directeur@proplast.com | Test1234! |
+| Commercial | commercial@proplast.com | Test1234! |
+| Collecteur | collecteur@proplast.com | Test1234! |
+
+---
+
+## Architecture
+
+Le projet utilise **Clean Architecture** avec **Domain-Driven Design (DDD)** :
+
+```
+src/
+├── domain/           # Entités, Enums, Exceptions, Ports
+├── application/      # Use Cases (Logique métier)
+├── infrastructure/  # Implémentations (Prisma, Services)
+└── presentation/    # Controllers & DTOs (API REST)
+```
+
+---
+
+## Commandes utiles
+
+```bash
+# Linting
+npm run lint
+
+# Tests
+npm run test
+npm run test:cov
+
+# Docker
+docker-compose up --build
+```
+
+---
+
+## API Endpoints
+
+### Auth
+- `POST /api/v1/auth/login` - Connexion
+- `POST /api/v1/auth/refresh` - Rafraîchir token
+- `POST /api/v1/auth/logout` - Déconnexion
+- `GET /api/v1/auth/me` - Profil utilisateur
+
+### Clients
+- `GET /api/v1/clients` - Liste paginée
+- `POST /api/v1/clients` - Créer
+- `PATCH /api/v1/clients/:id` - Modifier
+- `DELETE /api/v1/clients/:id` - Supprimer (Directeur)
+- `POST /api/v1/clients/import` - Import Excel
+- `GET /api/v1/clients/export` - Export CSV
+- `GET /api/v1/clients/export/excel` - Export Excel
+
+### Commandes
+- `GET /api/v1/commandes` - Liste
+- `POST /api/v1/commandes` - Créer
+- `POST /api/v1/commandes/:id/paiements` - Ajouter paiement
+- `PATCH /api/v1/commandes/:id/statut` - Changer statut
+
+### Collectes
+- `GET /api/v1/collectes` - Liste
+- `POST /api/v1/collectes` - Créer
+- `GET /api/v1/collectes/stats` - Statistiques
+
+### Factures
+- `POST /api/v1/factures/commandes/:id/facture/proforma` - Générer proforma
+- `POST /api/v1/factures/commandes/:id/facture/definitive` - Générer définitive
+- `GET /api/v1/factures/:id/pdf` - Télécharger PDF
+- `POST /api/v1/factures/:id/envoyer-whatsapp` - Envoyer par WhatsApp
+
+### Autres
+- `GET /api/v1/stats/dashboard` - Dashboard (Directeur)
+- `GET /api/v1/audit` - Journaux d'audit (Directeur)
+- `GET /api/v1/notifications` - Notifications
+
+---
+
+## Licence
+
+MIT License
+
+---
+
+*Pour une documentation complète, voir `DOCUMENTATION_COMPLETE.md`*

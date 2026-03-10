@@ -62,4 +62,8 @@ export class PrismaService implements OnModuleInit {
   get refreshToken() {
     return this.prisma.refreshToken;
   }
+
+  get facture() {
+    return this.prisma.facture;
+  }
 }

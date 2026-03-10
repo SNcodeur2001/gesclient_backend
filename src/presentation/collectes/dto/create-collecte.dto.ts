@@ -1,6 +1,6 @@
 import {
   IsOptional, IsUUID, IsNumber,
-  IsString, Min, ValidateNested,
+  IsString, Min, ValidateNested, IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional, ApiProperty } from
@@ -17,11 +17,13 @@ class ApporteurInfoDto {
   telephone?: string;
 }
 
-export class CreateCollecteDto {
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsUUID()
-  apporteurId?: string;
+/**
+ * Item de collecte pour le nouveau système multi-types
+ */
+export class CollecteItemDto {
+  @ApiProperty({ example: 'Plastique PP' })
+  @IsString()
+  typePlastique!: string;
 
   @ApiProperty({ example: 150.5 })
   @IsNumber()
@@ -32,6 +34,38 @@ export class CreateCollecteDto {
   @IsNumber()
   @Min(0)
   prixUnitaire!: number;
+}
+
+export class CreateCollecteDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  apporteurId?: string;
+
+  // =============================================
+  // Ancien système - un seul type (pour compatibilité)
+  // =============================================
+  @ApiPropertyOptional({ example: 150.5 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  quantiteKg?: number;
+
+  @ApiPropertyOptional({ example: 200 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  prixUnitaire?: number;
+
+  // =============================================
+  // Nouveau système - plusieurs types de plastiques
+  // =============================================
+  @ApiPropertyOptional({ type: [CollecteItemDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CollecteItemDto)
+  items?: CollecteItemDto[];
 
   @ApiPropertyOptional({ example: 'Plastique PP propre' })
   @IsOptional()

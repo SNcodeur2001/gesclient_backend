@@ -86,6 +86,14 @@ export class CollectesController {
     return { success: true, data: result };
   }
 
+  @Get('stats')
+  @Roles(Role.COLLECTEUR, Role.DIRECTEUR)
+  @ApiOperation({ summary: 'Statistiques des collectes' })
+  async stats() {
+    const data = await this.getStats.execute();
+    return { success: true, data };
+  }
+
   @Get(':id')
   @Roles(Role.COLLECTEUR, Role.DIRECTEUR)
   @ApiOperation({ summary: 'Détail d\'une collecte' })
@@ -101,11 +109,6 @@ export class CollectesController {
     return { success: true, data: collecte };
   }
 
-  @Get('stats')
-  @Roles(Role.COLLECTEUR, Role.DIRECTEUR)
-  @ApiOperation({ summary: 'Statistiques des collectes' })
-  async stats() {
-    const data = await this.getStats.execute();
-    return { success: true, data };
-  }
+  // Supprimé - cette route est maintenant avant :id pour éviter les conflits
+  // @Get('stats')
 }

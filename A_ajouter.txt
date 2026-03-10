@@ -1,0 +1,9 @@
+le directeur ne doit pas pouvoir creer de clients 
+l
+certains erreur ne sont pas géré 
+-la creation d'un client deja existant je dois mettre las bas une erreur explicite avec le bon code pas code 500
+parfois on a des erreur etimeout 
+
+
+possibilité mettre en place des jobs qui supprime les notifications lus tout les 48 h 
+pour alleger

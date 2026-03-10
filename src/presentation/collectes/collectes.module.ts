@@ -28,6 +28,10 @@ import { NOTIFICATION_REPOSITORY } from
   '../../domain/ports/repositories/notification.repository';
 import { AUDIT_LOG_REPOSITORY } from
   '../../domain/ports/repositories/audit-log.repository';
+import { USER_REPOSITORY } from
+  '../../domain/ports/repositories/user.repository';
+import { PrismaUserRepository } from
+  '../../infrastructure/database/repositories/prisma-user.repository';
 
 import { AuthModule } from '../auth/auth.module';
 
@@ -47,6 +51,8 @@ import { AuthModule } from '../auth/auth.module';
       useClass: PrismaNotificationRepository },
     { provide: AUDIT_LOG_REPOSITORY,
       useClass: PrismaAuditLogRepository },
+    { provide: USER_REPOSITORY,
+      useClass: PrismaUserRepository },
   ],
 })
 export class CollectesModule {}

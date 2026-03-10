@@ -13,6 +13,10 @@ import type { AuditLogRepository } from '../../domain/ports/repositories/audit-l
 import {
   AUDIT_LOG_REPOSITORY,
 } from '../../domain/ports/repositories/audit-log.repository';
+import type { UserRepository } from '../../domain/ports/repositories/user.repository';
+import {
+  USER_REPOSITORY,
+} from '../../domain/ports/repositories/user.repository';
 import { Commande } from
   '../../domain/entities/commande.entity';
 import { CommandeNotFoundException } from
@@ -23,6 +27,27 @@ import { AuditAction } from
   '../../domain/enums/audit-action.enum';
 import { NotificationType } from
   '../../domain/enums/notification-type.enum';
+import { WhatsAppService } from '../../infrastructure/services/whatsapp.service';
+import { ConfigService } from '@nestjs/config';
+
+export interface ChangeStatutOutput {
+  id: string;
+  reference: string;
+  type: import('../../domain/enums/commande-type.enum').CommandeType;
+  statut: CommandeStatut;
+  acheteurId: string;
+  produit: string;
+  quantite: number;
+  prixUnitaire: number;
+  montantHT: number;
+  tva: number;
+  montantTTC: number;
+  acompteMinimum: number | null;
+  acompteVerse: number;
+  commercialId: string;
+  createdAt: Date;
+  waMeLink?: string;
+}
 
 @Injectable()
 export class ChangeStatutUseCase {
@@ -33,6 +58,10 @@ export class ChangeStatutUseCase {
     private readonly notifRepo: NotificationRepository,
     @Inject(AUDIT_LOG_REPOSITORY)
     private readonly auditRepo: AuditLogRepository,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepo: UserRepository,
+    private readonly whatsappService: WhatsAppService,
+    private readonly configService: ConfigService,
   ) {}
 
   async execute(
@@ -41,7 +70,7 @@ export class ChangeStatutUseCase {
     userId: string,
     directeurId?: string,
     commercialId?: string,
-  ): Promise<Commande> {
+  ): Promise<ChangeStatutOutput> {
     const raw = await this.commandeRepo.findById(commandeId);
     if (!raw) {
       throw new CommandeNotFoundException(commandeId);
@@ -59,20 +88,47 @@ export class ChangeStatutUseCase {
       { statut: nouveauStatut },
     );
 
+    // Générer le lien WhatsApp quand passage à PRETE
+    let waMeLink: string | undefined;
+
+    if (nouveauStatut === CommandeStatut.PRETE) {
+      // Récupérer le client pour avoir son téléphone
+      const client = (raw as any).acheteer;
+      const clientTelephone = client?.telephone;
+
+      // Message de notification
+      const message = `Bonjour ${client?.nom || 'Client'},\n\nVotre commande ${raw.reference} est prête !\n\nMerci de passer la récupérer.\n\nPROPLAST`;
+
+      if (clientTelephone) {
+        try {
+          waMeLink = this.whatsappService.generateWhatsAppLink(clientTelephone, message);
+        } catch (error) {
+          console.error('Erreur génération lien WhatsApp:', error);
+        }
+      }
+    }
+
     // Notifications
     if (nouveauStatut === CommandeStatut.PRETE) {
       const message =
         `Commande ${raw.reference} est prête pour livraison`;
 
-      if (directeurId) {
-        await this.notifRepo.create({
-          userId: directeurId,
-          type: NotificationType.COMMANDE_PRETE,
-          message,
-          commandeId,
-          lien: `/commandes/${commandeId}`,
-        });
+      // Notification au directeur - recherche automatique
+      try {
+        const directeur = await this.userRepo.findDirecteur();
+        if (directeur) {
+          await this.notifRepo.create({
+            userId: directeur.id,
+            type: NotificationType.COMMANDE_PRETE,
+            message,
+            commandeId,
+            lien: `/commandes/${commandeId}`,
+          });
+        }
+      } catch (error) {
+        console.error('Erreur lors de la création de la notification:', error);
       }
+
       if (commercialId) {
         await this.notifRepo.create({
           userId: commercialId,
@@ -93,6 +149,9 @@ export class ChangeStatutUseCase {
       nouvelleValeur: { statut: nouveauStatut },
     });
 
-    return commandeMaj;
+    return {
+      ...commandeMaj,
+      waMeLink,
+    };
   }
 }

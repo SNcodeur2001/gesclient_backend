@@ -9,9 +9,9 @@ export interface CreateCommandeData {
   type: CommandeType;
   statut: CommandeStatut;
   acheteurId: string;
-  produit: string;
-  quantite: number;
-  prixUnitaire: number;
+  produit?: string | null;
+  quantite?: number | null;
+  prixUnitaire?: number | null;
   montantHT: number;
   tva: number;
   montantTTC: number;
@@ -19,6 +19,22 @@ export interface CreateCommandeData {
   acompteVerse: number;
   soldeRestant: number;
   commercialId: string;
+  // Nouveau système - plusieurs produits
+  items?: {
+    produit: string;
+    quantite: number;
+    prixUnitaire: number;
+  }[];
+}
+
+export interface UpdateCommandeData {
+  statut?: CommandeStatut;
+  montantHT?: number;
+  tva?: number;
+  montantTTC?: number;
+  acompteMinimum?: number | null;
+  acompteVerse?: number;
+  soldeRestant?: number;
 }
 
 export interface CommandeRepository {
@@ -44,6 +60,6 @@ export interface CommandeRepository {
   create(
     data: CreateCommandeData,
   ): Promise<Commande>;
-  update(id: string, data: Partial<Commande>): Promise<Commande>;
+  update(id: string, data: UpdateCommandeData): Promise<Commande>;
   countAll(): Promise<number>;
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { CommandeRepository, CreateCommandeData } from
+import { CommandeRepository, CreateCommandeData, UpdateCommandeData } from
   '../../../domain/ports/repositories/commande.repository';
 import { Commande } from
   '../../../domain/entities/commande.entity';
@@ -104,7 +104,7 @@ export class PrismaCommandeRepository
         this.prisma.commande.count({
           where: {
             ...where,
-            statut: CommandeStatut.EN_ATTENTE_ACOMPTE,
+            statut: CommandeStatut.EN_PREPARATION,
           },
         }),
       ]);
@@ -123,8 +123,21 @@ export class PrismaCommandeRepository
   async create(
     data: CreateCommandeData,
   ): Promise<Commande> {
+    // Préparer les données pour Prisma - transformer les items au format nested create
+    const prismaData: any = { ...data };
+    
+    if (data.items && data.items.length > 0) {
+      prismaData.items = {
+        create: data.items.map(item => ({
+          produit: item.produit,
+          quantite: item.quantite,
+          prixUnitaire: item.prixUnitaire,
+        })),
+      };
+    }
+    
     const raw = await this.prisma.commande.create({
-      data,
+      data: prismaData,
       include: { acheteur: true, commercial: true },
     });
     return this.toDomain(raw);
@@ -132,11 +145,11 @@ export class PrismaCommandeRepository
 
   async update(
     id: string,
-    data: Partial<Commande>,
+    data: UpdateCommandeData,
   ): Promise<Commande> {
     const raw = await this.prisma.commande.update({
       where: { id },
-      data,
+      data: data as any,
       include: {
         acheteur: true,
         commercial: true,

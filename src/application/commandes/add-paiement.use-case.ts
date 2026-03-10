@@ -21,6 +21,10 @@ import type { AuditLogRepository } from '../../domain/ports/repositories/audit-l
 import {
   AUDIT_LOG_REPOSITORY,
 } from '../../domain/ports/repositories/audit-log.repository';
+import type { UserRepository } from '../../domain/ports/repositories/user.repository';
+import {
+  USER_REPOSITORY,
+} from '../../domain/ports/repositories/user.repository';
 import { Commande } from
   '../../domain/entities/commande.entity';
 import { CommandeNotFoundException } from
@@ -31,10 +35,15 @@ import { ModePaiement } from
   '../../domain/enums/mode-paiement.enum';
 import { CommandeStatut } from
   '../../domain/enums/commande-statut.enum';
+import { CommandeType } from
+  '../../domain/enums/commande-type.enum';
+import { FactureType } from
+  '../../domain/enums/facture-type.enum';
 import { AuditAction } from
   '../../domain/enums/audit-action.enum';
 import { NotificationType } from
   '../../domain/enums/notification-type.enum';
+import { GenerateFactureUseCase } from '../factures/generate-facture.use-case';
 
 export interface AddPaiementInput {
   commandeId: string;
@@ -44,6 +53,18 @@ export interface AddPaiementInput {
   valideParId: string;
   directeurId?: string;
   commercialId?: string;
+}
+
+export interface AddPaiementOutput {
+  paiementId: string;
+  montant: number;
+  acompteVerse: number;
+  soldeRestant: number;
+  statut: CommandeStatut;
+  facturesGenerees?: {
+    proforma?: { id: string; numero: string };
+    definitive?: { id: string; numero: string };
+  };
 }
 
 @Injectable()
@@ -59,9 +80,12 @@ export class AddPaiementUseCase {
     private readonly notifRepo: NotificationRepository,
     @Inject(AUDIT_LOG_REPOSITORY)
     private readonly auditRepo: AuditLogRepository,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepo: UserRepository,
+    private readonly generateFactureUseCase: GenerateFactureUseCase,
   ) {}
 
-  async execute(input: AddPaiementInput) {
+  async execute(input: AddPaiementInput): Promise<AddPaiementOutput> {
     // 1. Récupérer la commande
     const raw = await this.commandeRepo.findById(
       input.commandeId,
@@ -77,10 +101,11 @@ export class AddPaiementUseCase {
     let nouveauStatut: CommandeStatut;
     let nouveauAcompteVerse: number;
     let nouveauSoldeRestant: number;
+    let facturesGenerees: AddPaiementOutput['facturesGenerees'] = undefined;
 
     if (input.type === PaiementType.ACOMPTE) {
-      // Vérifier statut
-      if (commande.statut !== CommandeStatut.EN_ATTENTE_ACOMPTE) {
+      // Vérifier statut - doit être en préparation
+      if (commande.statut !== CommandeStatut.EN_PREPARATION) {
         throw new BadRequestException(
           'Commande non en attente d\'acompte',
         );
@@ -91,6 +116,42 @@ export class AddPaiementUseCase {
       nouveauAcompteVerse = commande.acompteVerse + input.montant;
       nouveauSoldeRestant = commande.montantTTC - nouveauAcompteVerse;
       nouveauStatut = CommandeStatut.EN_PREPARATION;
+
+      // Générer automatique de la facture selon le tableau
+      // | Moment | Type de facture générée |
+      // |--------|------------------------|
+      // | SUR_PLACE paiement | **Définitif** |
+      // | A_DISTANCE acompt 50-99% | **Proforma** |
+      // | A_DISTANCE acompt 100% | **Définitif** (pas de proforma car déjà tout payé) |
+      const isSurPlace = commande.type === CommandeType.SUR_PLACE;
+      const isPaiementComplet = nouveauAcompteVerse >= commande.montantTTC;
+
+      try {
+        if (isSurPlace || isPaiementComplet) {
+          // SUR_PLACE ou A_DISTANCE 100% → Définitif seulement
+          const result = await this.generateFactureUseCase.execute({
+            commandeId: input.commandeId,
+            type: FactureType.DEFINITIVE,
+            genereParId: input.valideParId,
+          });
+          facturesGenerees = {
+            definitive: { id: result.facture.id, numero: result.facture.numero },
+          };
+        } else {
+          // A_DISTANCE + acompt < 100% → Proforma
+          const result = await this.generateFactureUseCase.execute({
+            commandeId: input.commandeId,
+            type: FactureType.PROFORMA,
+            genereParId: input.valideParId,
+          });
+          facturesGenerees = {
+            proforma: { id: result.facture.id, numero: result.facture.numero },
+          };
+        }
+      } catch (error) {
+        // Log error but don't fail the payment
+        console.error('Erreur génération facture automatique:', error);
+      }
 
     } else {
       // SOLDE
@@ -107,6 +168,22 @@ export class AddPaiementUseCase {
       nouveauAcompteVerse = commande.acompteVerse + input.montant;
       nouveauSoldeRestant = 0;
       nouveauStatut = CommandeStatut.FINALISEE;
+
+      // Paiement solde (A_DISTANCE) → Définitif
+      // On génère une nouvelle définitive (ou on met à jour l'existante)
+      try {
+        const result = await this.generateFactureUseCase.execute({
+          commandeId: input.commandeId,
+          type: FactureType.DEFINITIVE,
+          genereParId: input.valideParId,
+        });
+        facturesGenerees = {
+          definitive: { id: result.facture.id, numero: result.facture.numero },
+        };
+      } catch (error) {
+        // Log error but don't fail the payment
+        console.error('Erreur génération facture automatique:', error);
+      }
 
       // Mettre à jour revenue client
       const acheteur = await this.clientRepo.findById(
@@ -147,17 +224,23 @@ export class AddPaiementUseCase {
       ? `Acompte reçu : ${input.montant.toLocaleString()} FCFA — ${raw.reference}`
       : `Commande finalisée : ${raw.reference}`;
 
-    if (input.directeurId) {
-      await this.notifRepo.create({
-        userId: input.directeurId,
-        type: notifType,
-        message: notifMessage,
-        commandeId: input.commandeId,
-        lien: `/commandes/${input.commandeId}`,
-      });
+    // Notification au directeur - recherche automatique
+    try {
+      const directeur = await this.userRepo.findDirecteur();
+      if (directeur) {
+        await this.notifRepo.create({
+          userId: directeur.id,
+          type: notifType,
+          message: notifMessage,
+          commandeId: input.commandeId,
+          lien: `/commandes/${input.commandeId}`,
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors de la création de la notification:', error);
     }
-    if (input.commercialId &&
-        input.commercialId !== input.valideParId) {
+
+    if (input.commercialId && input.commercialId !== input.valideParId) {
       await this.notifRepo.create({
         userId: input.commercialId,
         type: notifType,
@@ -187,6 +270,7 @@ export class AddPaiementUseCase {
       acompteVerse: nouveauAcompteVerse,
       soldeRestant: nouveauSoldeRestant,
       statut: nouveauStatut,
+      facturesGenerees,
     };
   }
 }
