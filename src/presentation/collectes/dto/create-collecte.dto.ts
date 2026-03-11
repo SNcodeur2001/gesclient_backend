@@ -1,10 +1,14 @@
 import {
-  IsOptional, IsUUID, IsNumber,
-  IsString, Min, ValidateNested, IsArray,
+  IsOptional,
+  IsUUID,
+  IsNumber,
+  IsString,
+  Min,
+  ValidateNested,
+  IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiPropertyOptional, ApiProperty } from
-  '@nestjs/swagger';
+import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 
 class ApporteurInfoDto {
   @ApiProperty({ example: 'Moussa Traoré' })

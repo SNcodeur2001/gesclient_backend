@@ -56,10 +56,13 @@ export class PdfGeneratorService {
 
   private createDocDefinition(data: FactureData): any {
     const isProforma = data.type === FactureType.PROFORMA;
-    const documentTitle = isProforma ? 'FACTURE PROFORMA' : 'FACTURE DÉFINITIVE';
+    const documentTitle = isProforma
+      ? 'FACTURE PROFORMA'
+      : 'FACTURE DÉFINITIVE';
 
     // Calculate TVA percentage from data
-    const tvaPercentage = data.montantHT > 0 ? (data.tva / data.montantHT) * 100 : 0;
+    const tvaPercentage =
+      data.montantHT > 0 ? (data.tva / data.montantHT) * 100 : 0;
 
     return {
       content: [
@@ -96,7 +99,10 @@ export class PdfGeneratorService {
               stack: [
                 { text: `N°: ${data.numero}`, style: 'bold' },
                 { text: `Date: ${this.formatDate(data.date)}`, style: 'small' },
-                { text: isProforma ? 'Type: PROFORMA' : 'Type: DÉFINITIVE', style: 'small' },
+                {
+                  text: isProforma ? 'Type: PROFORMA' : 'Type: DÉFINITIVE',
+                  style: 'small',
+                },
               ],
             },
           ],
@@ -132,15 +138,35 @@ export class PdfGeneratorService {
                 { text: 'Désignation', style: 'tableHeader' },
                 { text: 'Qté', style: 'tableHeader', alignment: 'center' },
                 { text: 'P.U', style: 'tableHeader', alignment: 'right' },
-                { text: 'Montant HT', style: 'tableHeader', alignment: 'right' },
+                {
+                  text: 'Montant HT',
+                  style: 'tableHeader',
+                  alignment: 'right',
+                },
                 { text: 'TVA', style: 'tableHeader', alignment: 'right' },
               ],
               [
                 { text: data.produit, style: 'tableCell' },
-                { text: data.quantite.toString(), style: 'tableCell', alignment: 'center' },
-                { text: this.formatCurrency(data.prixUnitaire), style: 'tableCell', alignment: 'right' },
-                { text: this.formatCurrency(data.montantHT), style: 'tableCell', alignment: 'right' },
-                { text: this.formatCurrency(data.tva), style: 'tableCell', alignment: 'right' },
+                {
+                  text: data.quantite.toString(),
+                  style: 'tableCell',
+                  alignment: 'center',
+                },
+                {
+                  text: this.formatCurrency(data.prixUnitaire),
+                  style: 'tableCell',
+                  alignment: 'right',
+                },
+                {
+                  text: this.formatCurrency(data.montantHT),
+                  style: 'tableCell',
+                  alignment: 'right',
+                },
+                {
+                  text: this.formatCurrency(data.tva),
+                  style: 'tableCell',
+                  alignment: 'right',
+                },
               ],
             ],
           },
@@ -158,15 +184,30 @@ export class PdfGeneratorService {
                 body: [
                   [
                     { text: 'Montant HT:', style: 'totalLabel' },
-                    { text: this.formatCurrency(data.montantHT), style: 'totalValue', alignment: 'right' },
+                    {
+                      text: this.formatCurrency(data.montantHT),
+                      style: 'totalValue',
+                      alignment: 'right',
+                    },
                   ],
                   [
-                    { text: `TVA (${tvaPercentage.toFixed(0)}%):`, style: 'totalLabel' },
-                    { text: this.formatCurrency(data.tva), style: 'totalValue', alignment: 'right' },
+                    {
+                      text: `TVA (${tvaPercentage.toFixed(0)}%):`,
+                      style: 'totalLabel',
+                    },
+                    {
+                      text: this.formatCurrency(data.tva),
+                      style: 'totalValue',
+                      alignment: 'right',
+                    },
                   ],
                   [
                     { text: 'Montant TTC:', style: 'totalLabelBold' },
-                    { text: this.formatCurrency(data.montantTTC), style: 'totalValueBold', alignment: 'right' },
+                    {
+                      text: this.formatCurrency(data.montantTTC),
+                      style: 'totalValueBold',
+                      alignment: 'right',
+                    },
                   ],
                 ],
               },

@@ -5,10 +5,8 @@ import {
 } from '../../domain/ports/repositories/client.repository';
 import type { ClientRepository as ClientRepositoryType } from '../../domain/ports/repositories/client.repository';
 import { Role } from '../../domain/enums/role.enum';
-import { ClientType } from
-  '../../domain/enums/client-type.enum';
-import { ClientStatut } from
-  '../../domain/enums/client-statut.enum';
+import { ClientType } from '../../domain/enums/client-type.enum';
+import { ClientStatut } from '../../domain/enums/client-statut.enum';
 
 @Injectable()
 export class ExportClientsUseCase {
@@ -23,10 +21,8 @@ export class ExportClientsUseCase {
   ): Promise<string> {
     // Forcer type selon rôle
     let type = filters.type;
-    if (userRole === Role.COMMERCIAL)
-      type = ClientType.ACHETEUR;
-    if (userRole === Role.COLLECTEUR)
-      type = ClientType.APPORTEUR;
+    if (userRole === Role.COMMERCIAL) type = ClientType.ACHETEUR;
+    if (userRole === Role.COLLECTEUR) type = ClientType.APPORTEUR;
 
     const clients = await this.clientRepo.exportAll({
       type,
@@ -34,13 +30,16 @@ export class ExportClientsUseCase {
     });
 
     // Générer CSV
-    const headers = 'nom,prenom,email,telephone,'
-      + 'adresse,type,statut';
-    const rows = clients.map(c =>
+    const headers = 'nom,prenom,email,telephone,' + 'adresse,type,statut';
+    const rows = clients.map((c) =>
       [
-        c.nom, c.prenom || '',
-        c.email || '', c.telephone || '',
-        c.adresse || '', c.type, c.statut,
+        c.nom,
+        c.prenom || '',
+        c.email || '',
+        c.telephone || '',
+        c.adresse || '',
+        c.type,
+        c.statut,
       ].join(','),
     );
 

@@ -6,7 +6,7 @@ import { DomainExceptionFilter } from '../src/infrastructure/filters/domain-exce
 
 /**
  * Tests E2E - Auth Flow
- * 
+ *
  * NOTE: Ces tests nécessitent une base de données de test.
  * Pour les exécuter: npm run test:e2e
  */
@@ -22,16 +22,18 @@ describe('AuthController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    
+
     // Apply same configuration as main.ts bootstrap()
     app.setGlobalPrefix('api/v1');
-    app.useGlobalPipes(new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-    }));
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        forbidNonWhitelisted: true,
+      }),
+    );
     app.useGlobalFilters(new DomainExceptionFilter());
-    
+
     await app.init();
   });
 
@@ -63,8 +65,9 @@ describe('AuthController (e2e)', () => {
 
   describe('/api/v1/auth/me (GET)', () => {
     it('devrait retourner 401 sans token', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/api/v1/auth/me');
+      const response = await request(app.getHttpServer()).get(
+        '/api/v1/auth/me',
+      );
 
       expect(response.status).toBe(401);
     });

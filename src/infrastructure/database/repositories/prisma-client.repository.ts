@@ -1,18 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { ClientRepository } from
-  '../../../domain/ports/repositories/client.repository';
-import { Client } from
-  '../../../domain/entities/client.entity';
-import { ClientType } from
-  '../../../domain/enums/client-type.enum';
-import { ClientStatut } from
-  '../../../domain/enums/client-statut.enum';
+import { ClientRepository } from '../../../domain/ports/repositories/client.repository';
+import { Client } from '../../../domain/entities/client.entity';
+import { ClientType } from '../../../domain/enums/client-type.enum';
+import { ClientStatut } from '../../../domain/enums/client-statut.enum';
 
 @Injectable()
-export class PrismaClientRepository
-  implements ClientRepository {
-
+export class PrismaClientRepository implements ClientRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findById(id: string): Promise<Client | null> {
@@ -42,12 +36,9 @@ export class PrismaClientRepository
     if (filters.statut) where.statut = filters.statut;
     if (filters.search) {
       where.OR = [
-        { nom: { contains: filters.search,
-            mode: 'insensitive' } },
-        { email: { contains: filters.search,
-            mode: 'insensitive' } },
-        { telephone: { contains: filters.search,
-            mode: 'insensitive' } },
+        { nom: { contains: filters.search, mode: 'insensitive' } },
+        { email: { contains: filters.search, mode: 'insensitive' } },
+        { telephone: { contains: filters.search, mode: 'insensitive' } },
       ];
     }
 
@@ -63,20 +54,15 @@ export class PrismaClientRepository
       this.prisma.client.count({ where }),
     ]);
 
-    return { items: raws.map(r => this.toDomain(r)), total };
+    return { items: raws.map((r) => this.toDomain(r)), total };
   }
 
-  async create(
-    data: Omit<Client, 'id' | 'createdAt'>,
-  ): Promise<Client> {
+  async create(data: Omit<Client, 'id' | 'createdAt'>): Promise<Client> {
     const raw = await this.prisma.client.create({ data });
     return this.toDomain(raw);
   }
 
-  async update(
-    id: string,
-    data: Partial<Client>,
-  ): Promise<Client> {
+  async update(id: string, data: Partial<Client>): Promise<Client> {
     const raw = await this.prisma.client.update({
       where: { id },
       data,
@@ -100,12 +86,10 @@ export class PrismaClientRepository
     if (filters.statut) where.statut = filters.statut;
 
     const raws = await this.prisma.client.findMany({ where });
-    return raws.map(r => this.toDomain(r));
+    return raws.map((r) => this.toDomain(r));
   }
 
-  async createMany(
-    data: Omit<Client, 'id' | 'createdAt'>[],
-  ): Promise<number> {
+  async createMany(data: Omit<Client, 'id' | 'createdAt'>[]): Promise<number> {
     const result = await this.prisma.client.createMany({
       data,
       skipDuplicates: true,

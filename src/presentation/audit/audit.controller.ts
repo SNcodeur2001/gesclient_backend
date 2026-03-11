@@ -1,10 +1,9 @@
+import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
 import {
-  Controller, Get, Query,
-  Request, UseGuards,
-} from '@nestjs/common';
-import {
-  ApiTags, ApiBearerAuth,
-  ApiOperation, ApiResponse,
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
   ApiQuery,
 } from '@nestjs/swagger';
 
@@ -22,23 +21,65 @@ import { AuditLogResponseDto } from './dto/audit-log-response.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('audit')
 export class AuditController {
-  constructor(
-    private readonly getAuditLogs: GetAuditLogsUseCase,
-  ) {}
+  constructor(private readonly getAuditLogs: GetAuditLogsUseCase) {}
 
   @Get()
   @Roles(Role.DIRECTEUR)
-  @ApiOperation({ summary: 'Récupérer les logs d\'audit (réservé au Directeur)' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Numéro de page (défaut: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Nombre de résultats par page (défaut: 10)' })
-  @ApiQuery({ name: 'userId', required: false, type: String, description: 'Filtrer par utilisateur' })
-  @ApiQuery({ name: 'action', required: false, enum: AuditAction, description: 'Filtrer par type d\'action' })
-  @ApiQuery({ name: 'entite', required: false, type: String, description: 'Filtrer par entité (Client, Commande, etc.)' })
-  @ApiQuery({ name: 'dateDebut', required: false, type: Date, description: 'Date de début du filtre' })
-  @ApiQuery({ name: 'dateFin', required: false, type: Date, description: 'Date de fin du filtre' })
-  @ApiResponse({ status: 200, description: 'Logs d\'audit récupérés avec succès', type: [AuditLogResponseDto] })
+  @ApiOperation({
+    summary: "Récupérer les logs d'audit (réservé au Directeur)",
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Numéro de page (défaut: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Nombre de résultats par page (défaut: 10)',
+  })
+  @ApiQuery({
+    name: 'userId',
+    required: false,
+    type: String,
+    description: 'Filtrer par utilisateur',
+  })
+  @ApiQuery({
+    name: 'action',
+    required: false,
+    enum: AuditAction,
+    description: "Filtrer par type d'action",
+  })
+  @ApiQuery({
+    name: 'entite',
+    required: false,
+    type: String,
+    description: 'Filtrer par entité (Client, Commande, etc.)',
+  })
+  @ApiQuery({
+    name: 'dateDebut',
+    required: false,
+    type: Date,
+    description: 'Date de début du filtre',
+  })
+  @ApiQuery({
+    name: 'dateFin',
+    required: false,
+    type: Date,
+    description: 'Date de fin du filtre',
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Logs d'audit récupérés avec succès",
+    type: [AuditLogResponseDto],
+  })
   @ApiResponse({ status: 401, description: 'Non authentifié' })
-  @ApiResponse({ status: 403, description: 'Accès refusé - Réservé au Directeur' })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès refusé - Réservé au Directeur',
+  })
   async findAll(
     @Query('page') page = 1,
     @Query('limit') limit = 10,

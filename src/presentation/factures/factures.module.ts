@@ -45,6 +45,11 @@ import { AuthModule } from '../auth/auth.module';
     WhatsAppService,
     FileStorageService,
   ],
-  exports: [GenerateFactureUseCase, GetFacturePdfUseCase, SendFactureWhatsAppUseCase, PrismaFactureRepository],
+  exports: [
+    GenerateFactureUseCase,
+    GetFacturePdfUseCase,
+    SendFactureWhatsAppUseCase,
+    PrismaFactureRepository,
+  ],
 })
 export class FacturesModule {}

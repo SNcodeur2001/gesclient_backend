@@ -3,8 +3,6 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { DomainExceptionFilter } from './infrastructure/filters/domain-exception.filter';
- ;
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -12,11 +10,13 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
 
   // Validation globale
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    transform: true,
-    forbidNonWhitelisted: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
 
   // Filtre exceptions Domain → HTTP
   app.useGlobalFilters(new DomainExceptionFilter());

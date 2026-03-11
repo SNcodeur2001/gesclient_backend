@@ -7,11 +7,7 @@ import { Role } from '../../domain/enums/role.enum';
 export class JwtTokenService implements TokenService {
   constructor(private readonly jwtService: JwtService) {}
 
-  signAccessToken(payload: {
-    id: string;
-    email: string;
-    role: Role;
-  }): string {
+  signAccessToken(payload: { id: string; email: string; role: Role }): string {
     return this.jwtService.sign(payload, {
       expiresIn: '15m',
     });
@@ -25,9 +21,7 @@ export class JwtTokenService implements TokenService {
     return this.jwtService.verify(token);
   }
 
-  signRefreshToken(payload: {
-    id: string;
-  }): string {
+  signRefreshToken(payload: { id: string }): string {
     return this.jwtService.sign(payload, {
       expiresIn: '7d',
     });

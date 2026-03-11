@@ -4,9 +4,7 @@ import { AuditAction } from '../../enums/audit-action.enum';
 export const AUDIT_LOG_REPOSITORY = 'AUDIT_LOG_REPOSITORY';
 
 export interface AuditLogRepository {
-  log(
-    data: Omit<AuditLog, 'id' | 'createdAt'>,
-  ): Promise<void>;
+  log(data: Omit<AuditLog, 'id' | 'createdAt'>): Promise<void>;
   findAll(filters: {
     userId?: string;
     action?: AuditAction;

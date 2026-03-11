@@ -1,48 +1,25 @@
-import {
-  Injectable, Inject, BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import type { CommandeRepository } from '../../domain/ports/repositories/commande.repository';
-import {
-  COMMANDE_REPOSITORY,
-} from '../../domain/ports/repositories/commande.repository';
+import { COMMANDE_REPOSITORY } from '../../domain/ports/repositories/commande.repository';
 import type { PaiementRepository } from '../../domain/ports/repositories/paiement.repository';
-import {
-  PAIEMENT_REPOSITORY,
-} from '../../domain/ports/repositories/paiement.repository';
+import { PAIEMENT_REPOSITORY } from '../../domain/ports/repositories/paiement.repository';
 import type { ClientRepository } from '../../domain/ports/repositories/client.repository';
-import {
-  CLIENT_REPOSITORY,
-} from '../../domain/ports/repositories/client.repository';
+import { CLIENT_REPOSITORY } from '../../domain/ports/repositories/client.repository';
 import type { NotificationRepository } from '../../domain/ports/repositories/notification.repository';
-import {
-  NOTIFICATION_REPOSITORY,
-} from '../../domain/ports/repositories/notification.repository';
+import { NOTIFICATION_REPOSITORY } from '../../domain/ports/repositories/notification.repository';
 import type { AuditLogRepository } from '../../domain/ports/repositories/audit-log.repository';
-import {
-  AUDIT_LOG_REPOSITORY,
-} from '../../domain/ports/repositories/audit-log.repository';
+import { AUDIT_LOG_REPOSITORY } from '../../domain/ports/repositories/audit-log.repository';
 import type { UserRepository } from '../../domain/ports/repositories/user.repository';
-import {
-  USER_REPOSITORY,
-} from '../../domain/ports/repositories/user.repository';
-import { Commande } from
-  '../../domain/entities/commande.entity';
-import { CommandeNotFoundException } from
-  '../../domain/exceptions/commande-not-found.exception';
-import { PaiementType } from
-  '../../domain/enums/paiement-type.enum';
-import { ModePaiement } from
-  '../../domain/enums/mode-paiement.enum';
-import { CommandeStatut } from
-  '../../domain/enums/commande-statut.enum';
-import { CommandeType } from
-  '../../domain/enums/commande-type.enum';
-import { FactureType } from
-  '../../domain/enums/facture-type.enum';
-import { AuditAction } from
-  '../../domain/enums/audit-action.enum';
-import { NotificationType } from
-  '../../domain/enums/notification-type.enum';
+import { USER_REPOSITORY } from '../../domain/ports/repositories/user.repository';
+import { Commande } from '../../domain/entities/commande.entity';
+import { CommandeNotFoundException } from '../../domain/exceptions/commande-not-found.exception';
+import { PaiementType } from '../../domain/enums/paiement-type.enum';
+import { ModePaiement } from '../../domain/enums/mode-paiement.enum';
+import { CommandeStatut } from '../../domain/enums/commande-statut.enum';
+import { CommandeType } from '../../domain/enums/commande-type.enum';
+import { FactureType } from '../../domain/enums/facture-type.enum';
+import { AuditAction } from '../../domain/enums/audit-action.enum';
+import { NotificationType } from '../../domain/enums/notification-type.enum';
 import { GenerateFactureUseCase } from '../factures/generate-facture.use-case';
 
 export interface AddPaiementInput {
@@ -87,9 +64,7 @@ export class AddPaiementUseCase {
 
   async execute(input: AddPaiementInput): Promise<AddPaiementOutput> {
     // 1. Récupérer la commande
-    const raw = await this.commandeRepo.findById(
-      input.commandeId,
-    );
+    const raw = await this.commandeRepo.findById(input.commandeId);
     if (!raw) {
       throw new CommandeNotFoundException(input.commandeId);
     }
@@ -106,9 +81,7 @@ export class AddPaiementUseCase {
     if (input.type === PaiementType.ACOMPTE) {
       // Vérifier statut - doit être en préparation
       if (commande.statut !== CommandeStatut.EN_PREPARATION) {
-        throw new BadRequestException(
-          'Commande non en attente d\'acompte',
-        );
+        throw new BadRequestException("Commande non en attente d'acompte");
       }
       // Règle métier Domain → lance AcompteInsuffisantException
       commande.validerAcompte(input.montant);
@@ -135,7 +108,10 @@ export class AddPaiementUseCase {
             genereParId: input.valideParId,
           });
           facturesGenerees = {
-            definitive: { id: result.facture.id, numero: result.facture.numero },
+            definitive: {
+              id: result.facture.id,
+              numero: result.facture.numero,
+            },
           };
         } else {
           // A_DISTANCE + acompt < 100% → Proforma
@@ -152,7 +128,6 @@ export class AddPaiementUseCase {
         // Log error but don't fail the payment
         console.error('Erreur génération facture automatique:', error);
       }
-
     } else {
       // SOLDE
       if (commande.statut !== CommandeStatut.PRETE) {
@@ -186,9 +161,7 @@ export class AddPaiementUseCase {
       }
 
       // Mettre à jour revenue client
-      const acheteur = await this.clientRepo.findById(
-        commande.acheteurId,
-      );
+      const acheteur = await this.clientRepo.findById(commande.acheteurId);
       if (acheteur) {
         await this.clientRepo.update(commande.acheteurId, {
           totalRevenue: acheteur.totalRevenue + commande.montantTTC,
@@ -206,23 +179,22 @@ export class AddPaiementUseCase {
     });
 
     // 4. Mettre à jour la commande
-    const commandeMaj = await this.commandeRepo.update(
-      input.commandeId,
-      {
-        statut: nouveauStatut,
-        acompteVerse: nouveauAcompteVerse,
-        soldeRestant: nouveauSoldeRestant,
-      },
-    );
+    const commandeMaj = await this.commandeRepo.update(input.commandeId, {
+      statut: nouveauStatut,
+      acompteVerse: nouveauAcompteVerse,
+      soldeRestant: nouveauSoldeRestant,
+    });
 
     // 5. Notifications
-    const notifType = input.type === PaiementType.ACOMPTE
-      ? NotificationType.ACOMPTE_RECU
-      : NotificationType.COMMANDE_FINALISEE;
+    const notifType =
+      input.type === PaiementType.ACOMPTE
+        ? NotificationType.ACOMPTE_RECU
+        : NotificationType.COMMANDE_FINALISEE;
 
-    const notifMessage = input.type === PaiementType.ACOMPTE
-      ? `Acompte reçu : ${input.montant.toLocaleString()} FCFA — ${raw.reference}`
-      : `Commande finalisée : ${raw.reference}`;
+    const notifMessage =
+      input.type === PaiementType.ACOMPTE
+        ? `Acompte reçu : ${input.montant.toLocaleString()} FCFA — ${raw.reference}`
+        : `Commande finalisée : ${raw.reference}`;
 
     // Notification au directeur - recherche automatique
     try {

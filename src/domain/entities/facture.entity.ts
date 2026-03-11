@@ -14,8 +14,8 @@ export class Facture {
   statut!: FactureStatut;
   envoyeeWhatsApp!: boolean;
   dateEnvoiWhatsApp?: Date;
-  telephoneEnvoye?: string;  // Numéro de téléphone du client envoyé
-  downloadToken?: string;    // Token de téléchargement usage unique
+  telephoneEnvoye?: string; // Numéro de téléphone du client envoyé
+  downloadToken?: string; // Token de téléchargement usage unique
   downloadTokenExpiresAt?: Date; // Expiration du token
   genereParId!: string;
   createdAt!: Date;

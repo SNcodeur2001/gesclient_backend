@@ -18,8 +18,10 @@ import { AuthModule } from '../auth/auth.module';
     MarkAsReadUseCase,
 
     // Bindings
-    { provide: NOTIFICATION_REPOSITORY,
-      useClass: PrismaNotificationRepository },
+    {
+      provide: NOTIFICATION_REPOSITORY,
+      useClass: PrismaNotificationRepository,
+    },
   ],
 })
 export class NotificationsModule {}

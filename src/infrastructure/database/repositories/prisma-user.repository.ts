@@ -22,9 +22,7 @@ export class PrismaUserRepository implements UserRepository {
     return raw ? this.toDomain(raw) : null;
   }
 
-  async create(
-    data: Omit<User, 'id' | 'createdAt'>,
-  ): Promise<User> {
+  async create(data: Omit<User, 'id' | 'createdAt'>): Promise<User> {
     const raw = await this.prisma.user.create({ data });
     return this.toDomain(raw);
   }

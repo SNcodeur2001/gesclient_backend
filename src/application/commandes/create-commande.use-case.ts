@@ -5,35 +5,20 @@ import {
   CreateCommandeData,
 } from '../../domain/ports/repositories/commande.repository';
 import type { ClientRepository } from '../../domain/ports/repositories/client.repository';
-import {
-  CLIENT_REPOSITORY,
-} from '../../domain/ports/repositories/client.repository';
+import { CLIENT_REPOSITORY } from '../../domain/ports/repositories/client.repository';
 import type { NotificationRepository } from '../../domain/ports/repositories/notification.repository';
-import {
-  NOTIFICATION_REPOSITORY,
-} from '../../domain/ports/repositories/notification.repository';
+import { NOTIFICATION_REPOSITORY } from '../../domain/ports/repositories/notification.repository';
 import type { AuditLogRepository } from '../../domain/ports/repositories/audit-log.repository';
-import {
-  AUDIT_LOG_REPOSITORY,
-} from '../../domain/ports/repositories/audit-log.repository';
+import { AUDIT_LOG_REPOSITORY } from '../../domain/ports/repositories/audit-log.repository';
 import type { UserRepository } from '../../domain/ports/repositories/user.repository';
-import {
-  USER_REPOSITORY,
-} from '../../domain/ports/repositories/user.repository';
-import { Commande } from
-  '../../domain/entities/commande.entity';
-import { CommandeType } from
-  '../../domain/enums/commande-type.enum';
-import { CommandeStatut } from
-  '../../domain/enums/commande-statut.enum';
-import { ClientType } from
-  '../../domain/enums/client-type.enum';
-import { ClientStatut } from
-  '../../domain/enums/client-statut.enum';
-import { AuditAction } from
-  '../../domain/enums/audit-action.enum';
-import { NotificationType } from
-  '../../domain/enums/notification-type.enum';
+import { USER_REPOSITORY } from '../../domain/ports/repositories/user.repository';
+import { Commande } from '../../domain/entities/commande.entity';
+import { CommandeType } from '../../domain/enums/commande-type.enum';
+import { CommandeStatut } from '../../domain/enums/commande-statut.enum';
+import { ClientType } from '../../domain/enums/client-type.enum';
+import { ClientStatut } from '../../domain/enums/client-statut.enum';
+import { AuditAction } from '../../domain/enums/audit-action.enum';
+import { NotificationType } from '../../domain/enums/notification-type.enum';
 
 /**
  * Input DTO pour un item de commande
@@ -98,14 +83,20 @@ export class CreateCommandeUseCase {
     if (input.items && input.items.length > 0) {
       // Nouveau système: plusieurs produits
       items = input.items;
-    } else if (input.produit && input.quantite !== undefined && input.prixUnitaire !== undefined) {
+    } else if (
+      input.produit &&
+      input.quantite !== undefined &&
+      input.prixUnitaire !== undefined
+    ) {
       // Ancien système: un seul produit (backward compatibility)
       produit = input.produit;
       quantite = input.quantite;
       prixUnitaire = input.prixUnitaire;
       items = [{ produit, quantite, prixUnitaire }];
     } else {
-      throw new Error('Veuillez fournir soit un produit (produit, quantite, prixUnitaire) soit une liste de produits (items)');
+      throw new Error(
+        'Veuillez fournir soit un produit (produit, quantite, prixUnitaire) soit une liste de produits (items)',
+      );
     }
 
     // 3. Calculs métier
@@ -117,7 +108,8 @@ export class CreateCommandeUseCase {
     const tva = Commande.calculerTVA(montantHT, input.type);
     const montantTTC = montantHT + tva;
     const acompteMinimum = Commande.calculerAcompteMinimum(
-      montantTTC, input.type,
+      montantTTC,
+      input.type,
     );
 
     // 4. Statut initial - EN_PREPARATION car acompte requis pour A_DISTANCE
@@ -147,7 +139,7 @@ export class CreateCommandeUseCase {
       soldeRestant,
       commercialId: input.commercialId,
       // Les items seront créés via une relation
-      items: items.map(item => ({
+      items: items.map((item) => ({
         produit: item.produit,
         quantite: item.quantite,
         prixUnitaire: item.prixUnitaire,
@@ -180,8 +172,9 @@ export class CreateCommandeUseCase {
         await this.notifRepo.create({
           userId: directeur.id,
           type: NotificationType.COMMANDE_EN_ATTENTE,
-          message: `Nouvelle commande ${reference} — `
-            + `${montantTTC.toLocaleString()} FCFA (${items.length} produit(s))`,
+          message:
+            `Nouvelle commande ${reference} — ` +
+            `${montantTTC.toLocaleString()} FCFA (${items.length} produit(s))`,
           lien: `/commandes/${commande.id}`,
           commandeId: commande.id,
         });

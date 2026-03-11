@@ -13,7 +13,11 @@ export class LogoutUseCase {
     private readonly blacklistService: TokenBlacklistService,
   ) {}
 
-  async execute(userId: string, accessToken?: string, refreshToken?: string): Promise<void> {
+  async execute(
+    userId: string,
+    accessToken?: string,
+    refreshToken?: string,
+  ): Promise<void> {
     // 1. Blacklist the access token if provided
     // TTL = 15 minutes (900 seconds) - matches access token expiration
     if (accessToken) {

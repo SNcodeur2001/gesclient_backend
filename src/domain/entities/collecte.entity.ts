@@ -20,6 +20,11 @@ export class CollecteItem {
   createdAt!: Date;
 }
 
-export function calculerMontantCollecte(items: { quantiteKg: number; prixUnitaire: number }[]): number {
-  return items.reduce((sum, item) => sum + (item.quantiteKg * item.prixUnitaire), 0);
+export function calculerMontantCollecte(
+  items: { quantiteKg: number; prixUnitaire: number }[],
+): number {
+  return items.reduce(
+    (sum, item) => sum + item.quantiteKg * item.prixUnitaire,
+    0,
+  );
 }

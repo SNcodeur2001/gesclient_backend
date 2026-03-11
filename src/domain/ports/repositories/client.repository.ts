@@ -21,7 +21,5 @@ export interface ClientRepository {
     type?: ClientType;
     statut?: ClientStatut;
   }): Promise<Client[]>;
-  createMany(
-    data: Omit<Client, 'id' | 'createdAt'>[],
-  ): Promise<number>;
+  createMany(data: Omit<Client, 'id' | 'createdAt'>[]): Promise<number>;
 }

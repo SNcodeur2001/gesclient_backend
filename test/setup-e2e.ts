@@ -1,6 +1,6 @@
 /**
  * Setup E2E Tests
- * 
+ *
  * Ce fichier s'exécute avant les tests E2E.
  * Laissez l'application utiliser sa propre configuration Prisma.
  */

@@ -1,13 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
 import type { CommandeRepository } from '../../domain/ports/repositories/commande.repository';
-import {
-  COMMANDE_REPOSITORY,
-} from '../../domain/ports/repositories/commande.repository';
+import { COMMANDE_REPOSITORY } from '../../domain/ports/repositories/commande.repository';
 import { Role } from '../../domain/enums/role.enum';
-import { CommandeStatut } from
-  '../../domain/enums/commande-statut.enum';
-import { CommandeType } from
-  '../../domain/enums/commande-type.enum';
+import { CommandeStatut } from '../../domain/enums/commande-statut.enum';
+import { CommandeType } from '../../domain/enums/commande-type.enum';
 
 export interface GetCommandesInput {
   page: number;
@@ -26,13 +22,8 @@ export class GetCommandesUseCase {
     private readonly commandeRepo: CommandeRepository,
   ) {}
 
-  async execute(
-    filters: GetCommandesInput,
-    userRole: Role,
-    userId: string,
-  ) {
-    const commercialId =
-      userRole === Role.COMMERCIAL ? userId : undefined;
+  async execute(filters: GetCommandesInput, userRole: Role, userId: string) {
+    const commercialId = userRole === Role.COMMERCIAL ? userId : undefined;
 
     const result = await this.commandeRepo.findAll({
       ...filters,

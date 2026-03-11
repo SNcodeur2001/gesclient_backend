@@ -1,14 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { CollecteRepository } from
-  '../../../domain/ports/repositories/collecte.repository';
-import { Collecte } from
-  '../../../domain/entities/collecte.entity';
+import { CollecteRepository } from '../../../domain/ports/repositories/collecte.repository';
+import { Collecte } from '../../../domain/entities/collecte.entity';
 
 @Injectable()
-export class PrismaCollecteRepository
-  implements CollecteRepository {
-
+export class PrismaCollecteRepository implements CollecteRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findById(id: string): Promise<Collecte | null> {
@@ -22,12 +18,10 @@ export class PrismaCollecteRepository
     return raw ? this.toDomain(raw) : null;
   }
 
-  async create(
-    data: any,
-  ): Promise<Collecte> {
+  async create(data: any): Promise<Collecte> {
     // Préparer les données pour PrisNote: The database schema already includes CommandeItem and CollecteItem tables to support multiple products per order in the future, but the current implementation uses single product orders. If you want to implement multiple products per order feature, let me know and I can proceed with that.ma - transformer les items au format nested create
     const prismaData: any = { ...data };
-    
+
     if (data.items && data.items.length > 0) {
       prismaData.items = {
         create: data.items.map((item: any) => ({
@@ -37,7 +31,7 @@ export class PrismaCollecteRepository
         })),
       };
     }
-    
+
     const raw = await this.prisma.collecte.create({
       data: prismaData,
       include: {
@@ -68,16 +62,12 @@ export class PrismaCollecteRepository
         nom: { contains: filters.search, mode: 'insensitive' },
       };
     }
-    if (filters.collecteurId)
-      where.collecteurId = filters.collecteurId;
-    if (filters.apporteurId)
-      where.apporteurId = filters.apporteurId;
+    if (filters.collecteurId) where.collecteurId = filters.collecteurId;
+    if (filters.apporteurId) where.apporteurId = filters.apporteurId;
     if (filters.dateDebut || filters.dateFin) {
       where.createdAt = {};
-      if (filters.dateDebut)
-        where.createdAt.gte = filters.dateDebut;
-      if (filters.dateFin)
-        where.createdAt.lte = filters.dateFin;
+      if (filters.dateDebut) where.createdAt.gte = filters.dateDebut;
+      if (filters.dateFin) where.createdAt.lte = filters.dateFin;
     }
 
     const skip = (filters.page - 1) * filters.limit;
@@ -98,7 +88,7 @@ export class PrismaCollecteRepository
     ]);
 
     return {
-      items: raws.map(r => this.toDomain(r)),
+      items: raws.map((r) => this.toDomain(r)),
       total,
       tonnageTotal: aggregation._sum.quantiteKg || 0,
       montantTotal: aggregation._sum.montantTotal || 0,
@@ -121,11 +111,7 @@ export class PrismaCollecteRepository
     }[];
   }> {
     const now = new Date();
-    const debutMois = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      1,
-    );
+    const debutMois = new Date(now.getFullYear(), now.getMonth(), 1);
     const debutMoisPrecedent = new Date(
       now.getFullYear(),
       now.getMonth() - 5,
@@ -152,7 +138,7 @@ export class PrismaCollecteRepository
     });
 
     const topApporteurs = await Promise.all(
-      topRaw.map(async item => {
+      topRaw.map(async (item) => {
         const client = await this.prisma.client.findUnique({
           where: { id: item.apporteurId },
         });
@@ -172,21 +158,28 @@ export class PrismaCollecteRepository
     });
 
     const evolutionMap = new Map<string, number>();
-    collectes6mois.forEach(c => {
+    collectes6mois.forEach((c) => {
       const key = `${c.createdAt.getFullYear()}-${String(
         c.createdAt.getMonth() + 1,
       ).padStart(2, '0')}`;
-      evolutionMap.set(
-        key,
-        (evolutionMap.get(key) || 0) + (c.quantiteKg || 0),
-      );
+      evolutionMap.set(key, (evolutionMap.get(key) || 0) + (c.quantiteKg || 0));
     });
 
-    const moisLabels = ['Jan','Fév','Mar','Avr','Mai',
-      'Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-    const evolutionMensuelle = Array.from(
-      evolutionMap.entries(),
-    )
+    const moisLabels = [
+      'Jan',
+      'Fév',
+      'Mar',
+      'Avr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Aoû',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Déc',
+    ];
+    const evolutionMensuelle = Array.from(evolutionMap.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, tonnage]) => {
         const [year, month] = key.split('-');

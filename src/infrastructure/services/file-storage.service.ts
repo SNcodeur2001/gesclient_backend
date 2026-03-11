@@ -28,7 +28,7 @@ export class FileStorageService {
     // Generate unique filename to prevent collisions
     const uniqueFilename = `${randomUUID()}-${filename}`;
     const filePath = join(this.uploadDir, uniqueFilename);
-    
+
     await fs.writeFile(filePath, buffer);
     return filePath;
   }

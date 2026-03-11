@@ -5,9 +5,7 @@ import { Notification } from '../../../domain/entities/notification.entity';
 import { NotificationType } from '../../../domain/enums/notification-type.enum';
 
 @Injectable()
-export class PrismaNotificationRepository
-  implements NotificationRepository {
-
+export class PrismaNotificationRepository implements NotificationRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(

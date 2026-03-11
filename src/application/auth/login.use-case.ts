@@ -15,7 +15,6 @@ import { AuditAction } from '../../domain/enums/audit-action.enum';
 export interface LoginOutput {
   access_token: string;
   refresh_token: string;
-
 }
 
 @Injectable()
@@ -81,7 +80,7 @@ export class LoginUseCase {
 
     return {
       access_token: accessToken,
-      refresh_token: refreshToken
+      refresh_token: refreshToken,
     };
   }
 }

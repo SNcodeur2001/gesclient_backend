@@ -19,19 +19,13 @@ export class GetCollecteByIdUseCase {
     private readonly collecteRepo: CollecteRepositoryType,
   ) {}
 
-  async execute(
-    id: string,
-    userRole: Role,
-    userId: string,
-  ): Promise<Collecte> {
+  async execute(id: string, userRole: Role, userId: string): Promise<Collecte> {
     const collecte = await this.collecteRepo.findById(id);
     if (!collecte) throw new NotFoundException(`Collecte ${id} non trouvée`);
 
     // Vérifier le périmètre: un collecteur ne voit que ses propres collectes
     if (userRole === Role.COLLECTEUR && collecte.collecteurId !== userId) {
-      throw new ForbiddenException(
-        'Accès refusé à cette collecte',
-      );
+      throw new ForbiddenException('Accès refusé à cette collecte');
     }
 
     return collecte;
