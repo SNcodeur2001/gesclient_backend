@@ -1,13 +1,13 @@
 import {
-  IsNotEmpty, IsOptional, IsEmail,
-  IsString, IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsEmail,
+  IsString,
+  IsEnum,
 } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from
-  '@nestjs/swagger';
-import { ClientType } from
-  '../../../domain/enums/client-type.enum';
-import { ClientStatut } from
-  '../../../domain/enums/client-statut.enum';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ClientType } from '../../../domain/enums/client-type.enum';
+import { ClientStatut } from '../../../domain/enums/client-statut.enum';
 
 export class CreateClientDto {
   @ApiProperty({ example: 'Acme Corp' })

@@ -5,14 +5,10 @@ import { AuditLog } from '../../../domain/entities/audit-log.entity';
 import { AuditAction } from '../../../domain/enums/audit-action.enum';
 
 @Injectable()
-export class PrismaAuditLogRepository
-  implements AuditLogRepository {
-
+export class PrismaAuditLogRepository implements AuditLogRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async log(
-    data: Omit<AuditLog, 'id' | 'createdAt'>,
-  ): Promise<void> {
+  async log(data: Omit<AuditLog, 'id' | 'createdAt'>): Promise<void> {
     await this.prisma.auditLog.create({ data });
   }
 
@@ -31,10 +27,8 @@ export class PrismaAuditLogRepository
     if (filters.entite) where.entite = filters.entite;
     if (filters.dateDebut || filters.dateFin) {
       where.createdAt = {};
-      if (filters.dateDebut)
-        where.createdAt.gte = filters.dateDebut;
-      if (filters.dateFin)
-        where.createdAt.lte = filters.dateFin;
+      if (filters.dateDebut) where.createdAt.gte = filters.dateDebut;
+      if (filters.dateFin) where.createdAt.lte = filters.dateFin;
     }
 
     const skip = (filters.page - 1) * filters.limit;

@@ -19,7 +19,9 @@ export class SendFactureWhatsAppUseCase {
     private readonly fileStorage: FileStorageService,
   ) {}
 
-  async execute(factureId: string): Promise<{ success: boolean; message: string; waLink?: string }> {
+  async execute(
+    factureId: string,
+  ): Promise<{ success: boolean; message: string; waLink?: string }> {
     const facture = await this.factureRepository.findById(factureId);
     if (!facture) {
       throw new Error('Facture introuvable');
@@ -84,8 +86,8 @@ export class SendFactureWhatsAppUseCase {
 
     return {
       success: result.success,
-      message: result.success 
-        ? 'Lien WhatsApp généré. Le commercial peut cliquer pour envoyer la facture.' 
+      message: result.success
+        ? 'Lien WhatsApp généré. Le commercial peut cliquer pour envoyer la facture.'
         : result.error || 'Erreur lors de la génération du lien',
       waLink: result.waLink,
     };

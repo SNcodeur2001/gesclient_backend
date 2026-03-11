@@ -1,11 +1,17 @@
 import {
-  Controller, Get, Patch,
-  Param, Query, Request,
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Query,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import {
-  ApiTags, ApiBearerAuth,
-  ApiOperation, ApiResponse,
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
   ApiQuery,
 } from '@nestjs/swagger';
 
@@ -25,14 +31,22 @@ export class NotificationsController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Récupérer les notifications de l\'utilisateur connecté' })
-  @ApiQuery({ name: 'lu', required: false, type: Boolean, description: 'Filtrer par statut de lecture (true/false)' })
-  @ApiResponse({ status: 200, description: 'Notifications récupérées avec succès', type: [NotificationResponseDto] })
+  @ApiOperation({
+    summary: "Récupérer les notifications de l'utilisateur connecté",
+  })
+  @ApiQuery({
+    name: 'lu',
+    required: false,
+    type: Boolean,
+    description: 'Filtrer par statut de lecture (true/false)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Notifications récupérées avec succès',
+    type: [NotificationResponseDto],
+  })
   @ApiResponse({ status: 401, description: 'Non authentifié' })
-  async findAll(
-    @Query('lu') lu?: string,
-    @Request() req?: any,
-  ) {
+  async findAll(@Query('lu') lu?: string, @Request() req?: any) {
     const luBoolean = lu === 'true' ? true : lu === 'false' ? false : undefined;
     const result = await this.getNotifications.execute({
       userId: req.user.id,
@@ -46,10 +60,7 @@ export class NotificationsController {
   @ApiResponse({ status: 200, description: 'Notification marquée comme lue' })
   @ApiResponse({ status: 401, description: 'Non authentifié' })
   @ApiResponse({ status: 404, description: 'Notification non trouvée' })
-  async markAsRead(
-    @Param('id') id: string,
-    @Request() req: any,
-  ) {
+  async markAsRead(@Param('id') id: string, @Request() req: any) {
     await this.markAsReadUseCase.execute({
       id,
       userId: req.user.id,
@@ -62,7 +73,10 @@ export class NotificationsController {
 
   @Patch('read-all')
   @ApiOperation({ summary: 'Marquer toutes les notifications comme lues' })
-  @ApiResponse({ status: 200, description: 'Toutes les notifications marquées comme lues' })
+  @ApiResponse({
+    status: 200,
+    description: 'Toutes les notifications marquées comme lues',
+  })
   @ApiResponse({ status: 401, description: 'Non authentifié' })
   async markAllAsRead(@Request() req: any) {
     const count = await this.markAsReadUseCase.execute({

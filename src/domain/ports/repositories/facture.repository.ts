@@ -10,6 +10,9 @@ export interface FactureRepository {
   findByType(commandeId: string, type: FactureType): Promise<Facture | null>;
   update(id: string, data: Partial<Facture>): Promise<Facture>;
   updateStatut(id: string, statut: string): Promise<Facture>;
-  findAll(page: number, limit: number): Promise<{ data: Facture[]; total: number }>;
+  findAll(
+    page: number,
+    limit: number,
+  ): Promise<{ data: Facture[]; total: number }>;
   findByDownloadToken(token: string): Promise<Facture | null>;
 }

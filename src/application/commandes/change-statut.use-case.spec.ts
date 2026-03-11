@@ -48,7 +48,11 @@ describe('ChangeStatutUseCase', () => {
         },
         {
           provide: WhatsAppService,
-          useValue: { generateWhatsAppLink: jest.fn().mockReturnValue('https://wa.me/221771234567') },
+          useValue: {
+            generateWhatsAppLink: jest
+              .fn()
+              .mockReturnValue('https://wa.me/221771234567'),
+          },
         },
         {
           provide: ConfigService,
@@ -65,10 +69,17 @@ describe('ChangeStatutUseCase', () => {
   it('devrait changer le statut de EN_PREPARATION à PRETE', async () => {
     // Arrange
     commandeRepo.findById.mockResolvedValue(mockCommande);
-    commandeRepo.update.mockResolvedValue({ ...mockCommande, statut: CommandeStatut.PRETE });
+    commandeRepo.update.mockResolvedValue({
+      ...mockCommande,
+      statut: CommandeStatut.PRETE,
+    });
 
     // Act
-    const result = await useCase.execute('cmd-1', CommandeStatut.PRETE, 'user-1');
+    const result = await useCase.execute(
+      'cmd-1',
+      CommandeStatut.PRETE,
+      'user-1',
+    );
 
     // Assert
     expect(result.statut).toBe(CommandeStatut.PRETE);
@@ -77,11 +88,21 @@ describe('ChangeStatutUseCase', () => {
 
   it('devrait changer le statut de PRETE à FINALISEE', async () => {
     // Arrange
-    commandeRepo.findById.mockResolvedValue({ ...mockCommande, statut: CommandeStatut.PRETE });
-    commandeRepo.update.mockResolvedValue({ ...mockCommande, statut: CommandeStatut.FINALISEE });
+    commandeRepo.findById.mockResolvedValue({
+      ...mockCommande,
+      statut: CommandeStatut.PRETE,
+    });
+    commandeRepo.update.mockResolvedValue({
+      ...mockCommande,
+      statut: CommandeStatut.FINALISEE,
+    });
 
     // Act
-    const result = await useCase.execute('cmd-1', CommandeStatut.FINALISEE, 'user-1');
+    const result = await useCase.execute(
+      'cmd-1',
+      CommandeStatut.FINALISEE,
+      'user-1',
+    );
 
     // Assert
     expect(result.statut).toBe(CommandeStatut.FINALISEE);
@@ -93,17 +114,20 @@ describe('ChangeStatutUseCase', () => {
 
     // Act & Assert
     await expect(
-      useCase.execute('cmd-1', CommandeStatut.FINALISEE, 'user-1')
+      useCase.execute('cmd-1', CommandeStatut.FINALISEE, 'user-1'),
     ).rejects.toThrow(CommandeStatutInvalideException);
   });
 
   it('devrait lancer une exception pour transition PRETE → PRETE (identique)', async () => {
     // Arrange - Passer de PRETE à PRETE n'est pas autorisé
-    commandeRepo.findById.mockResolvedValue({ ...mockCommande, statut: CommandeStatut.PRETE });
+    commandeRepo.findById.mockResolvedValue({
+      ...mockCommande,
+      statut: CommandeStatut.PRETE,
+    });
 
     // Act & Assert
     await expect(
-      useCase.execute('cmd-1', CommandeStatut.PRETE, 'user-1')
+      useCase.execute('cmd-1', CommandeStatut.PRETE, 'user-1'),
     ).rejects.toThrow(CommandeStatutInvalideException);
   });
 });

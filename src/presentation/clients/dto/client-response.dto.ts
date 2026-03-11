@@ -3,19 +3,22 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class AssignedUserDto {
   @Expose()
-  @ApiProperty({ description: 'ID de l\'utilisateur assigné' })
+  @ApiProperty({ description: "ID de l'utilisateur assigné" })
   id!: string;
 
   @Expose()
-  @ApiProperty({ description: 'Nom de l\'utilisateur' })
+  @ApiProperty({ description: "Nom de l'utilisateur" })
   nom!: string;
 
   @Expose()
-  @ApiProperty({ description: 'Prénom de l\'utilisateur' })
+  @ApiProperty({ description: "Prénom de l'utilisateur" })
   prenom!: string;
 
   @Expose()
-  @ApiProperty({ description: 'Rôle de l\'utilisateur', enum: ['ADMIN', 'DIRECTEUR', 'COMMERCIAL'] })
+  @ApiProperty({
+    description: "Rôle de l'utilisateur",
+    enum: ['ADMIN', 'DIRECTEUR', 'COMMERCIAL'],
+  })
   role!: string;
 }
 
@@ -29,7 +32,10 @@ export class ClientResponseDto {
   nom!: string;
 
   @Expose()
-  @ApiProperty({ description: 'Prénom du contact (optionnel)', required: false })
+  @ApiProperty({
+    description: 'Prénom du contact (optionnel)',
+    required: false,
+  })
   prenom!: string;
 
   @Expose()
@@ -45,19 +51,31 @@ export class ClientResponseDto {
   adresse!: string;
 
   @Expose()
-  @ApiProperty({ description: 'Type de client', enum: ['APPORTEUR', 'ACHETEUR'] })
+  @ApiProperty({
+    description: 'Type de client',
+    enum: ['APPORTEUR', 'ACHETEUR'],
+  })
   type!: string;
 
   @Expose()
-  @ApiProperty({ description: 'Statut du client', enum: ['ACTIF', 'PROSPECT', 'INACTIF'] })
+  @ApiProperty({
+    description: 'Statut du client',
+    enum: ['ACTIF', 'PROSPECT', 'INACTIF'],
+  })
   statut!: string;
 
   @Expose()
-  @ApiProperty({ description: 'Revenu total généré par le client', required: false })
+  @ApiProperty({
+    description: 'Revenu total généré par le client',
+    required: false,
+  })
   totalRevenue!: number;
 
   @Expose()
-  @ApiProperty({ description: 'Notes additionnelles sur le client', required: false })
+  @ApiProperty({
+    description: 'Notes additionnelles sur le client',
+    required: false,
+  })
   notes!: string;
 
   @Expose()
@@ -66,6 +84,10 @@ export class ClientResponseDto {
 
   @Expose()
   @Type(() => AssignedUserDto)
-  @ApiProperty({ description: 'Utilisateur assigné à ce client', type: AssignedUserDto, required: false })
+  @ApiProperty({
+    description: 'Utilisateur assigné à ce client',
+    type: AssignedUserDto,
+    required: false,
+  })
   assignedTo?: AssignedUserDto;
 }

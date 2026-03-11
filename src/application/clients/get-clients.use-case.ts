@@ -4,10 +4,8 @@ import {
   CLIENT_REPOSITORY,
 } from '../../domain/ports/repositories/client.repository';
 import type { ClientRepository as ClientRepositoryType } from '../../domain/ports/repositories/client.repository';
-import { ClientType } from
-  '../../domain/enums/client-type.enum';
-import { ClientStatut } from
-  '../../domain/enums/client-statut.enum';
+import { ClientType } from '../../domain/enums/client-type.enum';
+import { ClientStatut } from '../../domain/enums/client-statut.enum';
 import { Role } from '../../domain/enums/role.enum';
 import { Client } from '../../domain/entities/client.entity';
 

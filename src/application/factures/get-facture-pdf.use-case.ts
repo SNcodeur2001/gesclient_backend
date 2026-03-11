@@ -13,8 +13,8 @@ export class GetFacturePdfUseCase {
   ) {}
 
   async execute(
-    factureId: string, 
-    options?: { token?: string; userId?: string }
+    factureId: string,
+    options?: { token?: string; userId?: string },
   ): Promise<{ facture: any; pdf: Buffer }> {
     let facture;
 

@@ -53,7 +53,10 @@ export class RefreshTokenUseCase {
     }
 
     // 5. Verify the token hash
-    const isValid = await this.hashService.compare(refreshToken, storedToken.tokenHash);
+    const isValid = await this.hashService.compare(
+      refreshToken,
+      storedToken.tokenHash,
+    );
     if (!isValid) {
       throw new UnauthorizedException('Refresh token invalide');
     }

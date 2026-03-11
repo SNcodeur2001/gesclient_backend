@@ -31,7 +31,7 @@ export class ExportClientsExcelUseCase {
     });
 
     // Préparer les données pour Excel
-    const data = clients.map(c => ({
+    const data = clients.map((c) => ({
       Nom: c.nom,
       Prénom: c.prenom || '',
       Email: c.email || '',
@@ -47,6 +47,8 @@ export class ExportClientsExcelUseCase {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Clients');
 
     // Retourner le buffer
-    return Buffer.from(XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' }));
+    return Buffer.from(
+      XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' }),
+    );
   }
 }

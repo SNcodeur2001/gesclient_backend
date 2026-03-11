@@ -6,7 +6,7 @@ export class AppService {
     return 'Hello World!';
   }
 
-  getHealth():string{
-    return "Api is on fire";
+  getHealth(): string {
+    return 'Api is on fire';
   }
 }

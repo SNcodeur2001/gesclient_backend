@@ -46,14 +46,20 @@ export class WhatsAppService {
     // Add Senegal country code if not present (numbers starting with 7, 8, or 9)
     if (cleaned.length === 9) {
       // Common Senegal prefixes: 77, 78, 70, 76
-      if (cleaned.startsWith('7') || cleaned.startsWith('8') || cleaned.startsWith('9')) {
+      if (
+        cleaned.startsWith('7') ||
+        cleaned.startsWith('8') ||
+        cleaned.startsWith('9')
+      ) {
         cleaned = '221' + cleaned;
       }
     }
 
     // Validate the final format (Senegal: 221 + 78/77 + 7-8 digits = 10-11 digits total)
     if (!/^221[78]\d{7,8}$/.test(cleaned)) {
-      throw new Error(`Format de numéro invalide: ${phone}. Formats acceptés: +22177XXXXXX, 22177XXXXXX, 77XXXXXX`);
+      throw new Error(
+        `Format de numéro invalide: ${phone}. Formats acceptés: +22177XXXXXX, 22177XXXXXX, 77XXXXXX`,
+      );
     }
 
     return cleaned;
@@ -93,18 +99,21 @@ PROPLAST`;
    * Send WhatsApp message (simulation for development)
    * Returns a wa.me link that the commercial can use
    */
-  async sendMessage(message: WhatsAppMessage): Promise<{ 
-    success: boolean; 
+  async sendMessage(message: WhatsAppMessage): Promise<{
+    success: boolean;
     waLink?: string;
-    messageId?: string; 
-    error?: string 
+    messageId?: string;
+    error?: string;
   }> {
     try {
       // Validate phone number
       const normalizedPhone = this.normalizePhoneNumber(message.to);
 
       // Generate wa.me link
-      const waLink = this.generateWhatsAppLink(normalizedPhone, message.message);
+      const waLink = this.generateWhatsAppLink(
+        normalizedPhone,
+        message.message,
+      );
 
       // Log for development
       console.log(`📱 Lien WhatsApp généré pour ${normalizedPhone}:`);
@@ -134,7 +143,12 @@ PROPLAST`;
     montant: number,
     downloadLink: string,
   ): Promise<{ success: boolean; waLink?: string; error?: string }> {
-    const message = this.generateFactureMessage(clientName, factureNumero, montant, downloadLink);
+    const message = this.generateFactureMessage(
+      clientName,
+      factureNumero,
+      montant,
+      downloadLink,
+    );
     return this.sendMessage({ to: phoneNumber, message });
   }
 
@@ -147,11 +161,16 @@ PROPLAST`;
     pdfBuffer: Buffer,
     filename: string,
     caption?: string,
-  ): Promise<{ success: boolean; messageId?: string; waLink?: string; error?: string }> {
+  ): Promise<{
+    success: boolean;
+    messageId?: string;
+    waLink?: string;
+    error?: string;
+  }> {
     // Cette méthode génère un lien wa.me - le commercial devra envoyer manuellement
     const normalizedPhone = this.normalizePhoneNumber(phoneNumber);
     const message = caption || `Voici votre facture: ${filename}`;
-    
+
     return this.sendMessage({ to: normalizedPhone, message });
   }
 }

@@ -1,9 +1,21 @@
 import {
-  Controller, Get, Post, Body, Param, Query, Request,
-  UseGuards, Res, HttpStatus, HttpCode,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  Request,
+  UseGuards,
+  Res,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import {
-  ApiTags, ApiBearerAuth, ApiOperation, ApiResponse,
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
   ApiQuery,
 } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -37,9 +49,7 @@ export class FacturesController {
   @Roles(Role.COMMERCIAL, Role.DIRECTEUR)
   @ApiOperation({ summary: 'Liste paginée des factures' })
   @ApiResponse({ status: 200, description: 'Liste des factures' })
-  async findAll(
-    @Query() pagination: FacturePaginationDto,
-  ) {
+  async findAll(@Query() pagination: FacturePaginationDto) {
     const page = pagination.page || 1;
     const limit = pagination.limit || 20;
     const result = await this.factureRepository.findAll(page, limit);
@@ -122,7 +132,7 @@ export class FacturesController {
     // If token provided, its an external download (no auth required)
     if (token) {
       const { pdf, facture } = await this.getFacturePdf.execute(id, { token });
-      
+
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader(
         'Content-Disposition',
@@ -151,9 +161,7 @@ export class FacturesController {
   @ApiOperation({ summary: 'Envoyer une facture par WhatsApp' })
   @ApiResponse({ status: 200, description: 'Facture envoyée par WhatsApp' })
   @ApiResponse({ status: 400, description: 'Erreur lors de lenvoi' })
-  async sendWhatsApp(
-    @Param('id') id: string,
-  ) {
+  async sendWhatsApp(@Param('id') id: string) {
     const result = await this.sendFactureWhatsApp.execute(id);
     return {
       success: result.success,

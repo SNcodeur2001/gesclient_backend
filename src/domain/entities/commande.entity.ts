@@ -36,19 +36,17 @@ export class Commande {
   static calculerMontantHT(
     items: Array<{ quantite: number; prixUnitaire: number }>,
   ): number {
-    return items.reduce((sum, item) => sum + (item.quantite * item.prixUnitaire), 0);
+    return items.reduce(
+      (sum, item) => sum + item.quantite * item.prixUnitaire,
+      0,
+    );
   }
 
   /**
    * Calcule la TVA selon le type de commande
    */
-  static calculerTVA(
-    montantHT: number,
-    type: CommandeType,
-  ): number {
-    return type === CommandeType.A_DISTANCE
-      ? montantHT * 0.20
-      : 0;
+  static calculerTVA(montantHT: number, type: CommandeType): number {
+    return type === CommandeType.A_DISTANCE ? montantHT * 0.2 : 0;
   }
 
   /**
@@ -65,9 +63,7 @@ export class Commande {
     montantTTC: number,
     type: CommandeType,
   ): number | null {
-    return type === CommandeType.A_DISTANCE
-      ? montantTTC * 0.50
-      : null;
+    return type === CommandeType.A_DISTANCE ? montantTTC * 0.5 : null;
   }
 
   validerAcompte(montant: number): void {
@@ -92,11 +88,7 @@ export class Commande {
 
     const autorisees = transitions[this.statut] ?? [];
     if (!autorisees.includes(nouveauStatut)) {
-      throw new CommandeStatutInvalideException(
-        this.statut,
-        nouveauStatut,
-      );
+      throw new CommandeStatutInvalideException(this.statut, nouveauStatut);
     }
   }
-
 }

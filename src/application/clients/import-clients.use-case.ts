@@ -16,14 +16,10 @@ import {
 } from '../../domain/ports/repositories/audit-log.repository';
 import type { AuditLogRepository as AuditLogRepositoryType } from '../../domain/ports/repositories/audit-log.repository';
 import { Role } from '../../domain/enums/role.enum';
-import { ClientType } from
-  '../../domain/enums/client-type.enum';
-import { ClientStatut } from
-  '../../domain/enums/client-statut.enum';
-import { AuditAction } from
-  '../../domain/enums/audit-action.enum';
-import { NotificationType } from
-  '../../domain/enums/notification-type.enum';
+import { ClientType } from '../../domain/enums/client-type.enum';
+import { ClientStatut } from '../../domain/enums/client-statut.enum';
+import { AuditAction } from '../../domain/enums/audit-action.enum';
+import { NotificationType } from '../../domain/enums/notification-type.enum';
 
 export interface ImportError {
   ligne: number;
@@ -59,9 +55,7 @@ export class ImportClientsUseCase {
   ): Promise<ImportResult> {
     // Déterminer le type selon le rôle
     const type =
-      userRole === Role.COLLECTEUR
-        ? ClientType.APPORTEUR
-        : ClientType.ACHETEUR;
+      userRole === Role.COLLECTEUR ? ClientType.APPORTEUR : ClientType.ACHETEUR;
 
     // Parser le fichier Excel
     const workbook = XLSX.read(buffer, { type: 'buffer' });
@@ -102,15 +96,17 @@ export class ImportClientsUseCase {
       let clientStatut = ClientStatut.PROSPECT;
       if (statutImport) {
         const statutUpper = statutImport.toString().toUpperCase().trim();
-        if (statutUpper === 'ACTIF' || statutUpper === 'PROSPECT' || statutUpper === 'INACTIF') {
+        if (
+          statutUpper === 'ACTIF' ||
+          statutUpper === 'PROSPECT' ||
+          statutUpper === 'INACTIF'
+        ) {
           clientStatut = ClientStatut[statutUpper as keyof typeof ClientStatut];
         }
       }
 
       if (email) {
-        const existing = await this.clientRepo.findByEmail(
-          email,
-        );
+        const existing = await this.clientRepo.findByEmail(email);
         if (existing) {
           errors.push({
             ligne,
@@ -124,8 +120,7 @@ export class ImportClientsUseCase {
         nom: row.nom || row.Nom,
         prenom: row.prenom || row.Prenom || null,
         email: email || null,
-        telephone:
-          row.telephone || row.Telephone || null,
+        telephone: row.telephone || row.Telephone || null,
         adresse: row.adresse || row.Adresse || null,
         type: clientType,
         statut: clientStatut,
@@ -148,8 +143,8 @@ export class ImportClientsUseCase {
       await this.notifRepo.create({
         userId: directeurId,
         type: NotificationType.IMPORT_TERMINE,
-        message: `Import ${filename} : ${count} créés, `
-          + `${errors.length} erreurs`,
+        message:
+          `Import ${filename} : ${count} créés, ` + `${errors.length} erreurs`,
       });
     }
 

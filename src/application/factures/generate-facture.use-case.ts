@@ -4,7 +4,10 @@ import type { FactureRepository } from '../../domain/ports/repositories/facture.
 import type { CommandeRepository } from '../../domain/ports/repositories/commande.repository';
 import { FACTURE_REPOSITORY } from '../../domain/ports/repositories/facture.repository';
 import { COMMANDE_REPOSITORY } from '../../domain/ports/repositories/commande.repository';
-import { PdfGeneratorService, FactureData } from '../../infrastructure/services/pdf-generator.service';
+import {
+  PdfGeneratorService,
+  FactureData,
+} from '../../infrastructure/services/pdf-generator.service';
 import { FileStorageService } from '../../infrastructure/services/file-storage.service';
 import { FactureType } from '../../domain/enums/facture-type.enum';
 
@@ -42,10 +45,16 @@ export class GenerateFactureUseCase {
       );
       if (existingProforma) {
         // Regenerate PDF and update file path
-        const pdf = await this.generatePdf(commande, existingProforma, params.type);
+        const pdf = await this.generatePdf(
+          commande,
+          existingProforma,
+          params.type,
+        );
         const filename = `${existingProforma.numero}.pdf`;
         const fichierPath = await this.fileStorage.saveFile(pdf, filename);
-        await this.factureRepository.update(existingProforma.id, { fichierPath });
+        await this.factureRepository.update(existingProforma.id, {
+          fichierPath,
+        });
         return {
           facture: { ...existingProforma, fichierPath },
           pdf,
@@ -112,9 +121,13 @@ export class GenerateFactureUseCase {
     return `${prefix}-${year}-${uniquePart}`;
   }
 
-  private async generatePdf(commande: any, facture: any, type: FactureType): Promise<Buffer> {
-    const acheteur = (commande as any).acheteur;
-    const commercial = (commande as any).commercial;
+  private async generatePdf(
+    commande: any,
+    facture: any,
+    type: FactureType,
+  ): Promise<Buffer> {
+    const acheteur = commande.acheteur;
+    const commercial = commande.commercial;
 
     const factureData: FactureData = {
       numero: facture.numero,

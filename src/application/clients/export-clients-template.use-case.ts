@@ -19,7 +19,7 @@ export class ExportClientsTemplateUseCase {
 
     // Créer le workbook Excel
     const worksheet = XLSX.utils.json_to_sheet(templateData);
-    
+
     // Ajuster la largeur des colonnes
     worksheet['!cols'] = [
       { wch: 20 }, // Nom
@@ -35,6 +35,8 @@ export class ExportClientsTemplateUseCase {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Template');
 
     // Retourner le buffer
-    return Buffer.from(XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' }));
+    return Buffer.from(
+      XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' }),
+    );
   }
 }

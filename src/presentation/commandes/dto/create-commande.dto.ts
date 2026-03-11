@@ -1,13 +1,18 @@
 import {
-  IsEnum, IsOptional, IsUUID,
-  IsNotEmpty, IsNumber, IsString, Min,
-  ValidateNested, IsArray, IsNotEmptyObject,
+  IsEnum,
+  IsOptional,
+  IsUUID,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  Min,
+  ValidateNested,
+  IsArray,
+  IsNotEmptyObject,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty, ApiPropertyOptional } from
-  '@nestjs/swagger';
-import { CommandeType } from
-  '../../../domain/enums/commande-type.enum';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { CommandeType } from '../../../domain/enums/commande-type.enum';
 
 class AcheteurInfoDto {
   @ApiProperty() @IsString() nom!: string;

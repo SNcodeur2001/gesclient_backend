@@ -1,5 +1,4 @@
-import { NotificationType } from
-  '../enums/notification-type.enum';
+import { NotificationType } from '../enums/notification-type.enum';
 
 export class Notification {
   id!: string;

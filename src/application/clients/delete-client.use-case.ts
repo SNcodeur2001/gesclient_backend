@@ -9,10 +9,8 @@ import {
   AUDIT_LOG_REPOSITORY,
 } from '../../domain/ports/repositories/audit-log.repository';
 import type { AuditLogRepository as AuditLogRepositoryType } from '../../domain/ports/repositories/audit-log.repository';
-import { ClientNotFoundException } from
-  '../../domain/exceptions/client-not-found.exception';
-import { AuditAction } from
-  '../../domain/enums/audit-action.enum';
+import { ClientNotFoundException } from '../../domain/exceptions/client-not-found.exception';
+import { AuditAction } from '../../domain/enums/audit-action.enum';
 
 @Injectable()
 export class DeleteClientUseCase {

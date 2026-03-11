@@ -26,7 +26,8 @@ export class DomainExceptionFilter implements ExceptionFilter {
         error: {
           code: 'CLIENT_NOT_FOUND',
           message: exception.message,
-          timestamp, path,
+          timestamp,
+          path,
         },
       });
     }
@@ -37,7 +38,8 @@ export class DomainExceptionFilter implements ExceptionFilter {
         error: {
           code: 'CLIENT_ALREADY_EXISTS',
           message: exception.message,
-          timestamp, path,
+          timestamp,
+          path,
         },
       });
     }
@@ -53,7 +55,8 @@ export class DomainExceptionFilter implements ExceptionFilter {
             montantMinimum: exception.montantMinimum,
             montantTTC: exception.montantTTC,
           },
-          timestamp, path,
+          timestamp,
+          path,
         },
       });
     }
@@ -64,7 +67,8 @@ export class DomainExceptionFilter implements ExceptionFilter {
         error: {
           code: 'COMMANDE_STATUT_INVALIDE',
           message: exception.message,
-          timestamp, path,
+          timestamp,
+          path,
         },
       });
     }
@@ -75,7 +79,8 @@ export class DomainExceptionFilter implements ExceptionFilter {
         error: {
           code: 'INVALID_CREDENTIALS',
           message: exception.message,
-          timestamp, path,
+          timestamp,
+          path,
         },
       });
     }
@@ -86,7 +91,8 @@ export class DomainExceptionFilter implements ExceptionFilter {
         error: {
           code: 'COMMANDE_NOT_FOUND',
           message: exception.message,
-          timestamp, path,
+          timestamp,
+          path,
         },
       });
     }
@@ -97,7 +103,8 @@ export class DomainExceptionFilter implements ExceptionFilter {
         error: {
           code: 'HTTP_ERROR',
           message: exception.message,
-          timestamp, path,
+          timestamp,
+          path,
         },
       });
     }
@@ -108,7 +115,8 @@ export class DomainExceptionFilter implements ExceptionFilter {
       error: {
         code: 'INTERNAL_ERROR',
         message: 'Erreur serveur interne',
-        timestamp, path,
+        timestamp,
+        path,
       },
     });
   }

@@ -1,32 +1,17 @@
-import {
-  Injectable, Inject,
-} from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import type { CommandeRepository } from '../../domain/ports/repositories/commande.repository';
-import {
-  COMMANDE_REPOSITORY,
-} from '../../domain/ports/repositories/commande.repository';
+import { COMMANDE_REPOSITORY } from '../../domain/ports/repositories/commande.repository';
 import type { NotificationRepository } from '../../domain/ports/repositories/notification.repository';
-import {
-  NOTIFICATION_REPOSITORY,
-} from '../../domain/ports/repositories/notification.repository';
+import { NOTIFICATION_REPOSITORY } from '../../domain/ports/repositories/notification.repository';
 import type { AuditLogRepository } from '../../domain/ports/repositories/audit-log.repository';
-import {
-  AUDIT_LOG_REPOSITORY,
-} from '../../domain/ports/repositories/audit-log.repository';
+import { AUDIT_LOG_REPOSITORY } from '../../domain/ports/repositories/audit-log.repository';
 import type { UserRepository } from '../../domain/ports/repositories/user.repository';
-import {
-  USER_REPOSITORY,
-} from '../../domain/ports/repositories/user.repository';
-import { Commande } from
-  '../../domain/entities/commande.entity';
-import { CommandeNotFoundException } from
-  '../../domain/exceptions/commande-not-found.exception';
-import { CommandeStatut } from
-  '../../domain/enums/commande-statut.enum';
-import { AuditAction } from
-  '../../domain/enums/audit-action.enum';
-import { NotificationType } from
-  '../../domain/enums/notification-type.enum';
+import { USER_REPOSITORY } from '../../domain/ports/repositories/user.repository';
+import { Commande } from '../../domain/entities/commande.entity';
+import { CommandeNotFoundException } from '../../domain/exceptions/commande-not-found.exception';
+import { CommandeStatut } from '../../domain/enums/commande-statut.enum';
+import { AuditAction } from '../../domain/enums/audit-action.enum';
+import { NotificationType } from '../../domain/enums/notification-type.enum';
 import { WhatsAppService } from '../../infrastructure/services/whatsapp.service';
 import { ConfigService } from '@nestjs/config';
 
@@ -83,10 +68,9 @@ export class ChangeStatutUseCase {
     // Lance CommandeStatutInvalideException si invalide
     commande.validerTransition(nouveauStatut);
 
-    const commandeMaj = await this.commandeRepo.update(
-      commandeId,
-      { statut: nouveauStatut },
-    );
+    const commandeMaj = await this.commandeRepo.update(commandeId, {
+      statut: nouveauStatut,
+    });
 
     // Générer le lien WhatsApp quand passage à PRETE
     let waMeLink: string | undefined;
@@ -101,7 +85,10 @@ export class ChangeStatutUseCase {
 
       if (clientTelephone) {
         try {
-          waMeLink = this.whatsappService.generateWhatsAppLink(clientTelephone, message);
+          waMeLink = this.whatsappService.generateWhatsAppLink(
+            clientTelephone,
+            message,
+          );
         } catch (error) {
           console.error('Erreur génération lien WhatsApp:', error);
         }
@@ -110,8 +97,7 @@ export class ChangeStatutUseCase {
 
     // Notifications
     if (nouveauStatut === CommandeStatut.PRETE) {
-      const message =
-        `Commande ${raw.reference} est prête pour livraison`;
+      const message = `Commande ${raw.reference} est prête pour livraison`;
 
       // Notification au directeur - recherche automatique
       try {

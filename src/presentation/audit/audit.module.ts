@@ -17,8 +17,7 @@ import { AuthModule } from '../auth/auth.module';
     GetAuditLogsUseCase,
 
     // Bindings
-    { provide: AUDIT_LOG_REPOSITORY,
-      useClass: PrismaAuditLogRepository },
+    { provide: AUDIT_LOG_REPOSITORY, useClass: PrismaAuditLogRepository },
   ],
 })
 export class AuditModule {}

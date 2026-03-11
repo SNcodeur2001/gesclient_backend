@@ -1,34 +1,19 @@
 import { Injectable, Inject } from '@nestjs/common';
 import type { CollecteRepository } from '../../domain/ports/repositories/collecte.repository';
-import {
-  COLLECTE_REPOSITORY,
-} from '../../domain/ports/repositories/collecte.repository';
+import { COLLECTE_REPOSITORY } from '../../domain/ports/repositories/collecte.repository';
 import type { ClientRepository } from '../../domain/ports/repositories/client.repository';
-import {
-  CLIENT_REPOSITORY,
-} from '../../domain/ports/repositories/client.repository';
+import { CLIENT_REPOSITORY } from '../../domain/ports/repositories/client.repository';
 import type { NotificationRepository } from '../../domain/ports/repositories/notification.repository';
-import {
-  NOTIFICATION_REPOSITORY,
-} from '../../domain/ports/repositories/notification.repository';
+import { NOTIFICATION_REPOSITORY } from '../../domain/ports/repositories/notification.repository';
 import type { AuditLogRepository } from '../../domain/ports/repositories/audit-log.repository';
-import {
-  AUDIT_LOG_REPOSITORY,
-} from '../../domain/ports/repositories/audit-log.repository';
+import { AUDIT_LOG_REPOSITORY } from '../../domain/ports/repositories/audit-log.repository';
 import type { UserRepository } from '../../domain/ports/repositories/user.repository';
-import {
-  USER_REPOSITORY,
-} from '../../domain/ports/repositories/user.repository';
-import { Collecte } from
-  '../../domain/entities/collecte.entity';
-import { ClientType } from
-  '../../domain/enums/client-type.enum';
-import { ClientStatut } from
-  '../../domain/enums/client-statut.enum';
-import { AuditAction } from
-  '../../domain/enums/audit-action.enum';
-import { NotificationType } from
-  '../../domain/enums/notification-type.enum';
+import { USER_REPOSITORY } from '../../domain/ports/repositories/user.repository';
+import { Collecte } from '../../domain/entities/collecte.entity';
+import { ClientType } from '../../domain/enums/client-type.enum';
+import { ClientStatut } from '../../domain/enums/client-statut.enum';
+import { AuditAction } from '../../domain/enums/audit-action.enum';
+import { NotificationType } from '../../domain/enums/notification-type.enum';
 
 /**
  * Input DTO pour un item de collecte
@@ -91,13 +76,18 @@ export class CreateCollecteUseCase {
     if (input.items && input.items.length > 0) {
       // Nouveau système: plusieurs types
       items = input.items;
-    } else if (input.quantiteKg !== undefined && input.prixUnitaire !== undefined) {
+    } else if (
+      input.quantiteKg !== undefined &&
+      input.prixUnitaire !== undefined
+    ) {
       // Ancien système: un seul type (backward compatibility)
       quantiteKg = input.quantiteKg;
       prixUnitaire = input.prixUnitaire;
       items = [{ typePlastique: 'Plastique', quantiteKg, prixUnitaire }];
     } else {
-      throw new Error('Veuillez fournir soit un type (quantiteKg, prixUnitaire) soit une liste de types (items)');
+      throw new Error(
+        'Veuillez fournir soit un type (quantiteKg, prixUnitaire) soit une liste de types (items)',
+      );
     }
 
     // Calcul montant total
@@ -137,8 +127,9 @@ export class CreateCollecteUseCase {
         await this.notifRepo.create({
           userId: directeur.id,
           type: NotificationType.NOUVELLE_COLLECTE,
-          message: `Nouvelle collecte : ${items.length} type(s) `
-            + `pour ${montantTotal.toLocaleString()} FCFA`,
+          message:
+            `Nouvelle collecte : ${items.length} type(s) ` +
+            `pour ${montantTotal.toLocaleString()} FCFA`,
           lien: `/collectes/${collecte.id}`,
         });
       }

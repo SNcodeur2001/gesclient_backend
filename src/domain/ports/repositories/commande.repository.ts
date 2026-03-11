@@ -57,9 +57,7 @@ export interface CommandeRepository {
       enAttenteAcompte: number;
     };
   }>;
-  create(
-    data: CreateCommandeData,
-  ): Promise<Commande>;
+  create(data: CreateCommandeData): Promise<Commande>;
   update(id: string, data: UpdateCommandeData): Promise<Commande>;
   countAll(): Promise<number>;
 }

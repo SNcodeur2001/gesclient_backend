@@ -1,9 +1,7 @@
 import { IsEnum, IsNumber, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { PaiementType } from
-  '../../../domain/enums/paiement-type.enum';
-import { ModePaiement } from
-  '../../../domain/enums/mode-paiement.enum';
+import { PaiementType } from '../../../domain/enums/paiement-type.enum';
+import { ModePaiement } from '../../../domain/enums/mode-paiement.enum';
 
 export class CreatePaiementDto {
   @ApiProperty({ enum: PaiementType })

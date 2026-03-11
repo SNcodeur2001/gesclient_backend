@@ -57,10 +57,13 @@ export class PrismaFactureRepository implements FactureRepository {
       },
       orderBy: { createdAt: 'desc' },
     });
-    return raws.map(r => this.toDomain(r));
+    return raws.map((r) => this.toDomain(r));
   }
 
-  async findByType(commandeId: string, type: FactureType): Promise<Facture | null> {
+  async findByType(
+    commandeId: string,
+    type: FactureType,
+  ): Promise<Facture | null> {
     const raw = await this.prisma.facture.findFirst({
       where: {
         commandeId,
@@ -110,7 +113,10 @@ export class PrismaFactureRepository implements FactureRepository {
     return this.toDomain(raw);
   }
 
-  async findAll(page: number, limit: number): Promise<{ data: Facture[]; total: number }> {
+  async findAll(
+    page: number,
+    limit: number,
+  ): Promise<{ data: Facture[]; total: number }> {
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
       this.prisma.facture.findMany({
@@ -128,7 +134,7 @@ export class PrismaFactureRepository implements FactureRepository {
       this.prisma.facture.count(),
     ]);
     return {
-      data: data.map(d => this.toDomain(d)),
+      data: data.map((d) => this.toDomain(d)),
       total,
     };
   }

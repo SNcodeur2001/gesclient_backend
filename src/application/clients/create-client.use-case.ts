@@ -14,17 +14,12 @@ import {
   AUDIT_LOG_REPOSITORY,
 } from '../../domain/ports/repositories/audit-log.repository';
 import type { AuditLogRepository as AuditLogRepositoryType } from '../../domain/ports/repositories/audit-log.repository';
-import { ClientAlreadyExistsException } from
-  '../../domain/exceptions/client-already-exists.exception';
+import { ClientAlreadyExistsException } from '../../domain/exceptions/client-already-exists.exception';
 import { Role } from '../../domain/enums/role.enum';
-import { ClientType } from
-  '../../domain/enums/client-type.enum';
-import { ClientStatut } from
-  '../../domain/enums/client-statut.enum';
-import { AuditAction } from
-  '../../domain/enums/audit-action.enum';
-import { NotificationType } from
-  '../../domain/enums/notification-type.enum';
+import { ClientType } from '../../domain/enums/client-type.enum';
+import { ClientStatut } from '../../domain/enums/client-statut.enum';
+import { AuditAction } from '../../domain/enums/audit-action.enum';
+import { NotificationType } from '../../domain/enums/notification-type.enum';
 import { Client } from '../../domain/entities/client.entity';
 
 export interface CreateClientInput {
@@ -62,9 +57,7 @@ export class CreateClientUseCase {
 
     // Vérifier doublon email
     if (input.email) {
-      const existing = await this.clientRepo.findByEmail(
-        input.email,
-      );
+      const existing = await this.clientRepo.findByEmail(input.email);
       if (existing) {
         throw new ClientAlreadyExistsException(input.email);
       }

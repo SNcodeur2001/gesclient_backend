@@ -19,19 +19,13 @@ export class GetCommandeByIdUseCase {
     private readonly commandeRepo: CommandeRepositoryType,
   ) {}
 
-  async execute(
-    id: string,
-    userRole: Role,
-    userId: string,
-  ): Promise<Commande> {
+  async execute(id: string, userRole: Role, userId: string): Promise<Commande> {
     const commande = await this.commandeRepo.findById(id);
     if (!commande) throw new NotFoundException(`Commande ${id} non trouvée`);
 
     // Vérifier le périmètre: un commercial ne voit que ses propres commandes
     if (userRole === Role.COMMERCIAL && commande.commercialId !== userId) {
-      throw new ForbiddenException(
-        'Accès refusé à cette commande',
-      );
+      throw new ForbiddenException('Accès refusé à cette commande');
     }
 
     return commande;
