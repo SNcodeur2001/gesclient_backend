@@ -78,3 +78,6 @@ diagrammes_*.txt
 
 # Plans directory (personal)
 plans/
+
+# Uploads directory
+uploads/
