@@ -9,6 +9,11 @@ import {
   AUDIT_LOG_REPOSITORY,
 } from '../../domain/ports/repositories/audit-log.repository';
 import type { AuditLogRepository as AuditLogRepositoryType } from '../../domain/ports/repositories/audit-log.repository';
+import {
+  UserRepository,
+  USER_REPOSITORY,
+} from '../../domain/ports/repositories/user.repository';
+import type { UserRepository as UserRepositoryType } from '../../domain/ports/repositories/user.repository';
 import { ClientNotFoundException } from '../../domain/exceptions/client-not-found.exception';
 import { AuditAction } from '../../domain/enums/audit-action.enum';
 
@@ -19,6 +24,8 @@ export class DeleteClientUseCase {
     private readonly clientRepo: ClientRepositoryType,
     @Inject(AUDIT_LOG_REPOSITORY)
     private readonly auditRepo: AuditLogRepositoryType,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepo: UserRepositoryType,
   ) {}
 
   async execute(id: string, userId: string): Promise<void> {
@@ -27,11 +34,15 @@ export class DeleteClientUseCase {
 
     await this.clientRepo.softDelete(id);
 
+    // Récupérer les infos utilisateur pour l'audit
+    const user = await this.userRepo.findById(userId);
+
     await this.auditRepo.log({
       userId,
       action: AuditAction.DELETE,
       entite: 'Client',
       entiteId: id,
+      description: `Client ${client.nom} supprimé par ${user?.prenom || ''} ${user?.nom || ''}`.trim(),
       ancienneValeur: { nom: client.nom },
     });
   }

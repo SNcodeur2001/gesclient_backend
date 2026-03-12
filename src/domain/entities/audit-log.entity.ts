@@ -6,6 +6,7 @@ export class AuditLog {
   action!: AuditAction;
   entite!: string;
   entiteId!: string;
+  description?: string;
   ancienneValeur?: object;
   nouvelleValeur?: object;
   createdAt!: Date;

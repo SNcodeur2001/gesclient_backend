@@ -18,6 +18,9 @@ export class AuditLogResponseDto {
   entiteId!: string;
 
   @ApiProperty({ required: false })
+  description?: string;
+
+  @ApiProperty({ required: false })
   ancienneValeur?: object;
 
   @ApiProperty({ required: false })

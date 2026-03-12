@@ -75,6 +75,7 @@ export class LoginUseCase {
       action: AuditAction.LOGIN,
       entite: 'User',
       entiteId: user.id,
+      description: `Connexion de ${user.prenom} ${user.nom} (${user.email})`,
       nouvelleValeur: { email: user.email },
     });
 

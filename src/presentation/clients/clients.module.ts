@@ -14,10 +14,12 @@ import { ExportClientsTemplateUseCase } from '../../application/clients/export-c
 import { PrismaClientRepository } from '../../infrastructure/database/repositories/prisma-client.repository';
 import { PrismaNotificationRepository } from '../../infrastructure/database/repositories/prisma-notification.repository';
 import { PrismaAuditLogRepository } from '../../infrastructure/database/repositories/prisma-audit-log.repository';
+import { PrismaUserRepository } from '../../infrastructure/database/repositories/prisma-user.repository';
 
 import { CLIENT_REPOSITORY } from '../../domain/ports/repositories/client.repository';
 import { NOTIFICATION_REPOSITORY } from '../../domain/ports/repositories/notification.repository';
 import { AUDIT_LOG_REPOSITORY } from '../../domain/ports/repositories/audit-log.repository';
+import { USER_REPOSITORY } from '../../domain/ports/repositories/user.repository';
 
 import { AuthModule } from '../auth/auth.module';
 
@@ -43,6 +45,7 @@ import { AuthModule } from '../auth/auth.module';
       useClass: PrismaNotificationRepository,
     },
     { provide: AUDIT_LOG_REPOSITORY, useClass: PrismaAuditLogRepository },
+    { provide: USER_REPOSITORY, useClass: PrismaUserRepository },
   ],
 })
 export class ClientsModule {}

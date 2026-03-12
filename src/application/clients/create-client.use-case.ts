@@ -14,6 +14,11 @@ import {
   AUDIT_LOG_REPOSITORY,
 } from '../../domain/ports/repositories/audit-log.repository';
 import type { AuditLogRepository as AuditLogRepositoryType } from '../../domain/ports/repositories/audit-log.repository';
+import {
+  UserRepository,
+  USER_REPOSITORY,
+} from '../../domain/ports/repositories/user.repository';
+import type { UserRepository as UserRepositoryType } from '../../domain/ports/repositories/user.repository';
 import { ClientAlreadyExistsException } from '../../domain/exceptions/client-already-exists.exception';
 import { Role } from '../../domain/enums/role.enum';
 import { ClientType } from '../../domain/enums/client-type.enum';
@@ -44,6 +49,8 @@ export class CreateClientUseCase {
     private readonly notifRepo: NotificationRepositoryType,
     @Inject(AUDIT_LOG_REPOSITORY)
     private readonly auditRepo: AuditLogRepositoryType,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepo: UserRepositoryType,
   ) {}
 
   async execute(input: CreateClientInput): Promise<Client> {
@@ -76,11 +83,15 @@ export class CreateClientUseCase {
       assignedUserId: input.userId,
     });
 
+    // Récupérer les infos utilisateur pour l'audit
+    const user = await this.userRepo.findById(input.userId);
+
     await this.auditRepo.log({
       userId: input.userId,
       action: AuditAction.CREATE,
       entite: 'Client',
       entiteId: client.id,
+      description: `Nouveau client ${client.nom} (${client.type}) créé par ${user?.prenom || ''} ${user?.nom || ''}`.trim(),
       nouvelleValeur: { nom: client.nom, type: client.type },
     });
 

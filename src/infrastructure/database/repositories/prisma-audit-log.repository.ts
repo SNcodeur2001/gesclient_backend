@@ -56,6 +56,7 @@ export class PrismaAuditLogRepository implements AuditLogRepository {
     log.action = raw.action as AuditAction;
     log.entite = raw.entite;
     log.entiteId = raw.entiteId;
+    log.description = raw.description;
     log.ancienneValeur = raw.ancienneValeur;
     log.nouvelleValeur = raw.nouvelleValeur;
     log.createdAt = raw.createdAt;

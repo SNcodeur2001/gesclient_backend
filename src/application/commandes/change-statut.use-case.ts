@@ -131,6 +131,7 @@ export class ChangeStatutUseCase {
       action: AuditAction.UPDATE,
       entite: 'Commande',
       entiteId: commandeId,
+      description: `Commande ${raw.reference} passée au statut ${nouveauStatut}`,
       ancienneValeur: { statut: commande.statut },
       nouvelleValeur: { statut: nouveauStatut },
     });

@@ -150,6 +150,7 @@ export class ClientsController {
     const csv = await this.exportClients.execute(
       { type, statut },
       req.user.role,
+      req.user.id,
     );
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename=clients.csv');
@@ -188,6 +189,7 @@ export class ClientsController {
     const buffer = await this.exportClientsExcel.execute(
       { type, statut },
       req.user.role,
+      req.user.id,
     );
     res.setHeader(
       'Content-Type',

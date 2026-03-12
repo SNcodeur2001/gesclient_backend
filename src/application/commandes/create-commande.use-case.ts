@@ -156,6 +156,7 @@ export class CreateCommandeUseCase {
       action: AuditAction.CREATE,
       entite: 'Commande',
       entiteId: commande.id,
+      description: `Nouvelle commande ${reference} de ${montantTTC.toLocaleString()} FCFA pour ${(await this.clientRepo.findById(acheteurId!))?.nom || 'Inconnu'}`,
       nouvelleValeur: {
         reference,
         type: input.type,

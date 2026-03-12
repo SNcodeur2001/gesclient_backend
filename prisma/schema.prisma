@@ -258,6 +258,7 @@ model AuditLog {
   action         AuditAction
   entite         String
   entiteId       String
+  description    String?
   ancienneValeur Json?
   nouvelleValeur Json?
   createdAt      DateTime    @default(now())

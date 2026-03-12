@@ -90,10 +90,12 @@ export class CreateCollecteUseCase {
       );
     }
 
-    // Calcul montant total
+    // Calcul montant total et poids total
     let montantTotal = 0;
+    let poidsTotal = 0;
     for (const item of items) {
       montantTotal += item.quantiteKg * item.prixUnitaire;
+      poidsTotal += item.quantiteKg;
     }
 
     // Créer la collecte
@@ -114,6 +116,7 @@ export class CreateCollecteUseCase {
       action: AuditAction.CREATE,
       entite: 'Collecte',
       entiteId: collecte.id,
+      description: `Collecte de ${poidsTotal.toLocaleString()} kg enregistrée pour ${(await this.clientRepo.findById(apporteurId!))?.nom || 'Inconnu'}`,
       nouvelleValeur: {
         montantTotal,
         itemsCount: items.length,

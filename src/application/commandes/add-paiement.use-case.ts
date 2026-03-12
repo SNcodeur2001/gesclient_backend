@@ -228,6 +228,7 @@ export class AddPaiementUseCase {
       action: AuditAction.UPDATE,
       entite: 'Commande',
       entiteId: input.commandeId,
+      description: `Paiement de ${input.montant.toLocaleString()} FCFA (${input.type}) reçu pour commande ${raw.reference}`,
       ancienneValeur: { statut: commande.statut },
       nouvelleValeur: {
         statut: nouveauStatut,

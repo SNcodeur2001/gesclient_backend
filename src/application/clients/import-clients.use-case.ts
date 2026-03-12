@@ -15,6 +15,11 @@ import {
   AUDIT_LOG_REPOSITORY,
 } from '../../domain/ports/repositories/audit-log.repository';
 import type { AuditLogRepository as AuditLogRepositoryType } from '../../domain/ports/repositories/audit-log.repository';
+import {
+  UserRepository,
+  USER_REPOSITORY,
+} from '../../domain/ports/repositories/user.repository';
+import type { UserRepository as UserRepositoryType } from '../../domain/ports/repositories/user.repository';
 import { Role } from '../../domain/enums/role.enum';
 import { ClientType } from '../../domain/enums/client-type.enum';
 import { ClientStatut } from '../../domain/enums/client-statut.enum';
@@ -44,6 +49,8 @@ export class ImportClientsUseCase {
     private readonly notifRepo: NotificationRepositoryType,
     @Inject(AUDIT_LOG_REPOSITORY)
     private readonly auditRepo: AuditLogRepositoryType,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepo: UserRepositoryType,
   ) {}
 
   async execute(
@@ -131,11 +138,15 @@ export class ImportClientsUseCase {
     // Créer les clients valides
     const count = await this.clientRepo.createMany(valides);
 
+    // Récupérer les infos utilisateur pour l'audit
+    const user = await this.userRepo.findById(userId);
+
     await this.auditRepo.log({
       userId,
       action: AuditAction.IMPORT,
       entite: 'Client',
       entiteId: 'bulk',
+      description: `Import de ${count} clients effectué par ${user?.prenom || ''} ${user?.nom || ''}`.trim(),
       nouvelleValeur: { count, filename },
     });
 
