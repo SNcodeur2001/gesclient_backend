@@ -1,0 +1,281 @@
+
+@startuml
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam classAttributeIconSize 0
+
+' =================== ENUMS ===================
+
+enum Role {
+  DIRECTEUR
+  COMMERCIAL
+  COLLECTEUR
+}
+
+enum ClientType {
+  APPORTEUR
+  ACHETEUR
+}
+
+enum ClientStatut {
+  ACTIF
+  PROSPECT
+  INACTIF
+}
+
+enum CommandeType {
+  SUR_PLACE
+  A_DISTANCE
+}
+
+enum CommandeStatut {
+  EN_ATTENTE_ACOMPTE
+  EN_PREPARATION
+  PRETE
+  FINALISEE
+}
+
+enum PaiementType {
+  ACOMPTE
+  SOLDE
+}
+
+enum ModePaiement {
+  ESPECES
+  VIREMENT
+  CHEQUE
+  MOBILE_MONEY
+}
+
+enum FactureType {
+  PROFORMA
+  DEFINITIVE
+}
+
+enum FactureStatut {
+  GENEREE
+  ENVOYEE
+  TELECHARGE
+}
+
+enum NotificationType {
+  NOUVELLE_COLLECTE
+  ACOMPTE_RECU
+  COMMANDE_PRETE
+  COMMANDE_FINALISEE
+  IMPORT_TERMINE
+  COMMANDE_EN_ATTENTE
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  IMPORT
+  EXPORT
+}
+
+enum ImportStatut {
+  EN_COURS
+  TERMINE
+  ERREUR
+}
+
+' =================== CLASSES ===================
+
+class User {
+  -id: String
+  -nom: String
+  -prenom: String
+  -email: String
+  -password: String
+  -role: Role
+  -actif: Boolean
+  -createdAt: DateTime
+  -updatedAt: DateTime
+}
+
+class Client {
+  -id: String
+  -nom: String
+  -prenom: String
+  -email: String
+  -telephone: String
+  -adresse: String
+  -type: ClientType
+  -statut: ClientStatut
+  -totalRevenue: Float
+  -notes: String
+  -assignedUserId: String
+  -createdAt: DateTime
+  -updatedAt: DateTime
+  -deletedAt: DateTime
+}
+
+class Commande {
+  -id: String
+  -reference: String
+  -type: CommandeType
+  -statut: CommandeStatut
+  -acheteurId: String
+  -montantHT: Float
+  -tva: Float
+  -montantTTC: Float
+  -acompteMinimum: Float
+  -acompteVerse: Float
+  -soldeRestant: Float
+  -commercialId: String
+  -createdAt: DateTime
+  -updatedAt: DateTime
+  -produit: String
+  -quantite: Float
+  -prixUnitaire: Float
+}
+
+class CommandeItem {
+  -id: String
+  -commandeId: String
+  -produit: String
+  -quantite: Float
+  -prixUnitaire: Float
+  -createdAt: DateTime
+}
+
+class Collecte {
+  -id: String
+  -apporteurId: String
+  -montantTotal: Float
+  -notes: String
+  -collecteurId: String
+  -createdAt: DateTime
+  -quantiteKg: Float
+  -prixUnitaire: Float
+}
+
+class CollecteItem {
+  -id: String
+  -collecteId: String
+  -typePlastique: String
+  -quantiteKg: Float
+  -prixUnitaire: Float
+  -createdAt: DateTime
+}
+
+class Paiement {
+  -id: String
+  -commandeId: String
+  -type: PaiementType
+  -montant: Float
+  -modePaiement: ModePaiement
+  -valideParId: String
+  -createdAt: DateTime
+}
+
+class Facture {
+  -id: String
+  -numero: String
+  -type: FactureType
+  -statut: FactureStatut
+  -commandeId: String
+  -montantHT: Float
+  -tva: Float
+  -montantTTC: Float
+  -fichierBlob: Bytes
+  -fichierPath: String
+  -envoyeeWhatsApp: Boolean
+  -dateEnvoiWhatsApp: DateTime
+  -telephoneEnvoye: String
+  -downloadToken: String
+  -downloadTokenExpiresAt: DateTime
+  -genereParId: String
+  -createdAt: DateTime
+  -updatedAt: DateTime
+}
+
+class Notification {
+  -id: String
+  -userId: String
+  -type: NotificationType
+  -message: String
+  -lu: Boolean
+  -lien: String
+  -clientId: String
+  -commandeId: String
+  -createdAt: DateTime
+}
+
+class AuditLog {
+  -id: String
+  -userId: String
+  -action: AuditAction
+  -entite: String
+  -entiteId: String
+  -description: String
+  -ancienneValeur: JSON
+  -nouvelleValeur: JSON
+  -createdAt: DateTime
+}
+
+class RefreshToken {
+  -id: String
+  -token: String
+  -tokenHash: String
+  -userId: String
+  -expiresAt: DateTime
+  -revokedAt: DateTime
+  -createdAt: DateTime
+}
+
+class Import {
+  -id: String
+  -filename: String
+  -totalRows: Int
+  -validRows: Int
+  -invalidRows: Int
+  -errors: JSON
+  -statut: ImportStatut
+  -userId: String
+  -createdAt: DateTime
+}
+
+' =================== RELATIONS ENUMS ===================
+
+User ..> Role
+Client ..> ClientType
+Client ..> ClientStatut
+Commande ..> CommandeType
+Commande ..> CommandeStatut
+Paiement ..> PaiementType
+Paiement ..> ModePaiement
+Facture ..> FactureType
+Facture ..> FactureStatut
+Notification ..> NotificationType
+AuditLog ..> AuditAction
+Import ..> ImportStatut
+
+' =================== RELATIONS CLASSES ===================
+
+User "1" -- "0..*" Client : assigne
+User "1" -- "0..*" Commande : commercial
+User "1" -- "0..*" Collecte : collecteur
+User "1" -- "0..*" Notification : reçoit
+User "1" -- "0..*" AuditLog : génère
+User "1" -- "0..*" RefreshToken : possède
+User "1" -- "0..*" Paiement : valide
+User "1" -- "0..*" Facture : génère
+User "1" -- "0..*" Import : lance
+
+Client "1" -- "0..*" Commande : acheteur
+Client "1" -- "0..*" Collecte : apporteur
+Client "1" -- "0..*" Notification : concerné
+
+Commande "1" -- "1..*" CommandeItem : contient
+Commande "1" -- "0..*" Paiement : reçoit
+Commande "1" -- "0..*" Facture : génère
+Commande "1" -- "0..*" Notification : déclenche
+
+Collecte "1" -- "1..*" CollecteItem : contient
+
+@enduml

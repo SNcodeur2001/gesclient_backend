@@ -1,0 +1,245 @@
+@startuml
+actor "Utilisateur" as User
+participant "Frontend" as Front
+participant "Backend" as Back
+database "PostgreSQL" as DB
+
+title Séquence - Authentification (Login)
+
+User -> Front: Saisit email + password
+activate Front
+
+Front -> Back: POST /auth/login\n(email, password)
+activate Back
+
+Back -> DB: Rechercher utilisateur par email
+activate DB
+DB --> Back: Utilisateur (ou null)
+deactivate DB
+
+alt Utilisateur non trouvé ou mot de passe invalide
+    Back --> Front: 401 - Identifiants incorrects
+    Front --> User: Message d'erreur
+
+else Identifiants valides
+
+    Back -> DB: Sauvegarder le refresh token (hashé)
+    activate DB
+    DB --> Back: Confirmation
+    deactivate DB
+
+    Back -> DB: Enregistrer log d'audit (LOGIN)
+    activate DB
+    DB --> Back: Confirmation
+    deactivate DB
+
+    Back --> Front: 200 OK\n(access_token 15min + refresh_token 7j)
+    Front --> User: Redirection vers le dashboard
+end
+
+deactivate Back
+deactivate Front
+@enduml
+
+```
+
+---
+
+**2. Logout avec Redis**
+
+```plantuml
+
+
+
+
+```
+
+---
+
+**3. Création Commande + Paiement + Facture**
+
+```plantuml
+@startuml
+actor "Commercial" as Commercial
+participant "Frontend" as Front
+participant "Backend" as Back
+database "PostgreSQL" as DB
+
+title Séquence - Création Commande + Paiement + Facture
+
+' ===================== CRÉATION COMMANDE =====================
+
+Commercial -> Front: Remplit le formulaire de commande
+activate Front
+
+Front -> Back: POST /commandes\n(type, produits[], acheteurId)
+activate Back
+
+Back -> DB: Vérifier / créer l'acheteur
+activate DB
+DB --> Back: Client
+deactivate DB
+
+note right of Back
+  Calculs automatiques :
+  montantHT = Σ(qté × prix)
+  TVA = 20% si A_DISTANCE, sinon 0
+  montantTTC = montantHT + TVA
+  acompteMinimum = 50% TTC si A_DISTANCE
+  statut initial = EN_PREPARATION
+end note
+
+Back -> DB: Enregistrer la commande + produits
+activate DB
+DB --> Back: Commande créée
+deactivate DB
+
+Back -> DB: Enregistrer log d'audit (CREATE)
+activate DB
+DB --> Back: Confirmation
+deactivate DB
+
+Back -> DB: Créer notification (COMMANDE_EN_ATTENTE)
+activate DB
+DB --> Back: Confirmation
+deactivate DB
+
+Back --> Front: 201 Created\n(commande avec HT, TVA, TTC, acompte minimum)
+Front --> Commercial: Affichage du détail commande
+deactivate Back
+deactivate Front
+
+' ===================== AJOUT PAIEMENT =====================
+
+Commercial -> Front: Enregistre un paiement
+activate Front
+
+Front -> Back: POST /commandes/:id/paiements\n(type, montant, modePaiement)
+activate Back
+
+Back -> DB: Récupérer la commande
+activate DB
+DB --> Back: Commande
+deactivate DB
+
+alt Acompte insuffisant (montant < acompte minimum)
+    Back --> Front: 400 - Acompte insuffisant
+    Front --> Commercial: Message d'erreur
+
+else Paiement valide
+
+    note right of Back
+      Mise à jour :
+      acompteVerse += montant
+      soldeRestant = montantTTC - acompteVerse
+
+      Facture générée :
+      - SUR_PLACE → Définitive
+      - A_DISTANCE partiel → Proforma
+      - A_DISTANCE complet → Définitive
+    end note
+
+    Back -> DB: Enregistrer le paiement
+    activate DB
+    DB --> Back: Confirmation
+    deactivate DB
+
+    Back -> DB: Mettre à jour la commande\n(statut, acompteVerse, soldeRestant)
+    activate DB
+    DB --> Back: Confirmation
+    deactivate DB
+
+    Back -> DB: Générer et sauvegarder la facture PDF\n(chemin fichier)
+    activate DB
+    DB --> Back: Facture créée
+    deactivate DB
+
+    Back -> DB: Créer notification\n(ACOMPTE_RECU ou COMMANDE_FINALISEE)
+    activate DB
+    DB --> Back: Confirmation
+    deactivate DB
+
+    Back -> DB: Enregistrer log d'audit (UPDATE)
+    activate DB
+    DB --> Back: Confirmation
+    deactivate DB
+
+    Back --> Front: 200 OK\n(paiement enregistré + facture générée)
+    Front --> Commercial: Affichage facture + nouveau statut
+end
+
+deactivate Back
+deactivate Front
+@enduml
+```
+
+---
+
+**4. Création Collecte**
+
+```plantuml
+@startuml
+actor "Collecteur" as Collecteur
+participant "Frontend" as Front
+participant "Backend" as Back
+database "PostgreSQL" as DB
+
+title Séquence - Création d'une Collecte
+
+Collecteur -> Front: Remplit le formulaire de collecte
+activate Front
+
+Front -> Back: POST /collectes\n(apporteurId?, types de plastique[], notes)
+activate Back
+
+Back -> DB: Vérifier / créer l'apporteur
+activate DB
+DB --> Back: Apporteur
+deactivate DB
+
+note right of Back
+  Calcul automatique :
+  montantTotal = Σ(quantiteKg × prixUnitaire)
+  (par type de plastique)
+end note
+
+Back -> DB: Enregistrer la collecte + types de plastique
+activate DB
+DB --> Back: Collecte créée
+deactivate DB
+
+Back -> DB: Enregistrer log d'audit (CREATE)
+activate DB
+DB --> Back: Confirmation
+deactivate DB
+
+Back -> DB: Créer notification (NOUVELLE_COLLECTE)
+activate DB
+DB --> Back: Confirmation
+deactivate DB
+
+Back --> Front: 201 Created\n(collecte enregistrée pour [montantTotal] FCFA)
+Front --> Collecteur: Confirmation + récapitulatif collecte
+deactivate Back
+deactivate Front
+
+' ===================== CONSULTATION STATS =====================
+
+Collecteur -> Front: Accède à ses statistiques
+activate Front
+
+Front -> Back: GET /collectes/stats
+activate Back
+
+Back -> DB: Requête agrégée des collectes\ndu collecteur
+activate DB
+DB --> Back: totalCollectes, montantTotal,\nquantitéTotale (kg)
+deactivate DB
+
+Back --> Front: 200 OK - Statistiques
+Front --> Collecteur: Affichage des statistiques
+deactivate Back
+deactivate Front
+
+@enduml
+```
