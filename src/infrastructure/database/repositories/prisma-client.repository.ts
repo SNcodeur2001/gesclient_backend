@@ -30,20 +30,28 @@ export class PrismaClientRepository implements ClientRepository {
     search?: string;
     page: number;
     limit: number;
-  }): Promise<{ items: Client[]; total: number }> {
-    const where: any = { deletedAt: null };
-    if (filters.type) where.type = filters.type;
-    if (filters.statut) where.statut = filters.statut;
+  }): Promise<{ items: Client[]; total: number; totalActifs: number; totalRevenue: number }> {
+    const baseWhere: any = { deletedAt: null };
+    if (filters.type) baseWhere.type = filters.type;
     if (filters.search) {
-      where.OR = [
+      baseWhere.OR = [
         { nom: { contains: filters.search, mode: 'insensitive' } },
         { email: { contains: filters.search, mode: 'insensitive' } },
         { telephone: { contains: filters.search, mode: 'insensitive' } },
       ];
     }
+    const where: any = { ...baseWhere };
+    if (filters.statut) where.statut = filters.statut;
 
     const skip = (filters.page - 1) * filters.limit;
-    const [raws, total] = await Promise.all([
+    const countActifsPromise =
+      !filters.statut || filters.statut === ClientStatut.ACTIF
+        ? this.prisma.client.count({
+            where: { ...baseWhere, statut: ClientStatut.ACTIF },
+          })
+        : Promise.resolve(0);
+
+    const [raws, total, totalActifs, revenueAgg] = await Promise.all([
       this.prisma.client.findMany({
         where,
         include: { assignedUser: true },
@@ -52,9 +60,19 @@ export class PrismaClientRepository implements ClientRepository {
         orderBy: { createdAt: 'desc' },
       }),
       this.prisma.client.count({ where }),
+      countActifsPromise,
+      this.prisma.client.aggregate({
+        where,
+        _sum: { totalRevenue: true },
+      }),
     ]);
 
-    return { items: raws.map((r) => this.toDomain(r)), total };
+    return {
+      items: raws.map((r) => this.toDomain(r)),
+      total,
+      totalActifs,
+      totalRevenue: revenueAgg._sum.totalRevenue || 0,
+    };
   }
 
   async create(data: Omit<Client, 'id' | 'createdAt'>): Promise<Client> {

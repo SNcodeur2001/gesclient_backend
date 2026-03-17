@@ -81,3 +81,7 @@ plans/
 
 # Uploads directory
 uploads/
+diagram_reorganise.puml
+diagrammes_classe.puml
+diagrammes_sequences.puml
+template_clients.xlsx

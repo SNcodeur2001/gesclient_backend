@@ -80,6 +80,13 @@ export class GenerateFactureUseCase {
       produit: commande.produit,
       quantite: commande.quantite,
       prixUnitaire: commande.prixUnitaire,
+      items: commande.items?.length
+        ? commande.items.map((i: any) => ({
+            produit: i.produit,
+            quantite: i.quantite,
+            prixUnitaire: i.prixUnitaire,
+          }))
+        : undefined,
       montantHT: commande.montantHT,
       tva: commande.tva,
       montantTTC: commande.montantTTC,
@@ -143,6 +150,13 @@ export class GenerateFactureUseCase {
       produit: commande.produit,
       quantite: commande.quantite,
       prixUnitaire: commande.prixUnitaire,
+      items: commande.items?.length
+        ? commande.items.map((i: any) => ({
+            produit: i.produit,
+            quantite: i.quantite,
+            prixUnitaire: i.prixUnitaire,
+          }))
+        : undefined,
       montantHT: commande.montantHT,
       tva: commande.tva,
       montantTTC: commande.montantTTC,

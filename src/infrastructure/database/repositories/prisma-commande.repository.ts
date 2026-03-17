@@ -20,6 +20,7 @@ export class PrismaCommandeRepository implements CommandeRepository {
         acheteur: true,
         commercial: true,
         paiements: { orderBy: { createdAt: 'asc' } },
+        items: true,
       },
     });
     return raw ? this.toDomain(raw) : null;

@@ -10,6 +10,7 @@ import {
   Res,
   HttpStatus,
   HttpCode,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,11 +19,12 @@ import {
   ApiResponse,
   ApiQuery,
 } from '@nestjs/swagger';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { Roles } from '../auth/guards/roles.decorator';
 import { Role } from '../../domain/enums/role.enum';
 
@@ -52,7 +54,12 @@ export class FacturesController {
   async findAll(@Query() pagination: FacturePaginationDto) {
     const page = pagination.page || 1;
     const limit = pagination.limit || 20;
-    const result = await this.factureRepository.findAll(page, limit);
+    const result = await this.factureRepository.findAll(
+      page,
+      limit,
+      pagination.type,
+      pagination.search,
+    );
     return {
       success: true,
       data: result.data,
@@ -63,6 +70,20 @@ export class FacturesController {
         totalPages: Math.ceil(result.total / limit),
       },
     };
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.COMMERCIAL, Role.DIRECTEUR)
+  @ApiOperation({ summary: 'Détail d’une facture' })
+  @ApiResponse({ status: 200, description: 'Facture trouvée' })
+  @ApiResponse({ status: 404, description: 'Facture introuvable' })
+  async findOne(@Param('id') id: string) {
+    const facture = await this.factureRepository.findById(id);
+    if (!facture) {
+      throw new NotFoundException('Facture introuvable');
+    }
+    return { success: true, data: facture };
   }
 
   @Post('commandes/:commandeId/facture/proforma')
@@ -118,7 +139,7 @@ export class FacturesController {
   }
 
   @Get(':id/pdf')
-  @UseGuards(ThrottlerGuard)
+  @UseGuards(ThrottlerGuard, OptionalJwtAuthGuard)
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Télécharger le PDF dune facture' })
   @ApiResponse({ status: 200, description: 'PDF de la facture' })
@@ -161,11 +182,19 @@ export class FacturesController {
   @ApiOperation({ summary: 'Envoyer une facture par WhatsApp' })
   @ApiResponse({ status: 200, description: 'Facture envoyée par WhatsApp' })
   @ApiResponse({ status: 400, description: 'Erreur lors de lenvoi' })
-  async sendWhatsApp(@Param('id') id: string) {
+  async sendWhatsApp(
+    @Param('id') id: string,
+    @Query('redirect') redirect?: string,
+    @Res({ passthrough: true }) res?: Response,
+  ) {
     const result = await this.sendFactureWhatsApp.execute(id);
+    if (redirect && result.waLink && res) {
+      res.redirect(result.waLink);
+    }
     return {
       success: result.success,
       message: result.message,
+      waLink: result.waLink,
     };
   }
 }

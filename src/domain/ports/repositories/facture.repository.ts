@@ -13,6 +13,8 @@ export interface FactureRepository {
   findAll(
     page: number,
     limit: number,
+    type?: FactureType,
+    search?: string,
   ): Promise<{ data: Facture[]; total: number }>;
   findByDownloadToken(token: string): Promise<Facture | null>;
 }

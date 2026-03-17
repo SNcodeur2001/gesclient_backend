@@ -1,4 +1,9 @@
-import { Injectable, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { FactureRepository } from '../../domain/ports/repositories/facture.repository';
 import { FACTURE_REPOSITORY } from '../../domain/ports/repositories/facture.repository';
@@ -24,7 +29,7 @@ export class SendFactureWhatsAppUseCase {
   ): Promise<{ success: boolean; message: string; waLink?: string }> {
     const facture = await this.factureRepository.findById(factureId);
     if (!facture) {
-      throw new Error('Facture introuvable');
+      throw new NotFoundException('Facture introuvable');
     }
 
     // Get client phone number from commande
@@ -32,11 +37,11 @@ export class SendFactureWhatsAppUseCase {
     const client = commande?.acheteur;
 
     if (!client?.telephone) {
-      throw new Error('Numéro de téléphone du client non disponible');
+      throw new BadRequestException('Numéro de téléphone du client non disponible');
     }
 
     if (!facture.fichierPath) {
-      throw new Error('PDF non disponible pour cette facture');
+      throw new BadRequestException('PDF non disponible pour cette facture');
     }
 
     // Read PDF from file system

@@ -101,7 +101,8 @@ export class CreateCollecteUseCase {
     // Créer la collecte
     const collecte = await this.collecteRepo.create({
       apporteurId: apporteurId!,
-      quantiteKg: items.length === 1 ? items[0].quantiteKg : null,
+      // Toujours stocker le poids total pour éviter les 0kg sur le multi-type
+      quantiteKg: poidsTotal,
       prixUnitaire: items.length === 1 ? items[0].prixUnitaire : null,
       montantTotal,
       notes: input.notes,

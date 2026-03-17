@@ -28,6 +28,8 @@ export class GetClientsUseCase {
   async execute(input: GetClientsInput): Promise<{
     items: Client[];
     total: number;
+    totalActifs: number;
+    totalRevenue: number;
     page: number;
     limit: number;
     totalPages: number;

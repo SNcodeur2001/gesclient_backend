@@ -45,6 +45,8 @@
 | **Authentification** | JWT + Refresh Tokens |
 | **Base de données** | PostgreSQL |
 | **Architecture** | Clean Architecture / DDD |
+| **Cache** | Redis |
+| **Rate Limiting** | Activé (throttler) |
 
 ---
 
@@ -78,43 +80,58 @@ src/
 ├── application/                               # Couche Application (Use Cases)
 │   ├── auth/
 │   │   ├── login.use-case.ts
+│   │   ├── login.use-case.spec.ts            # Test unitaire
 │   │   ├── logout.use-case.ts
 │   │   ├── refresh-token.use-case.ts
 │   │   └── get-profile.use-case.ts
 │   ├── clients/
 │   │   ├── get-clients.use-case.ts
+│   │   ├── get-client-by-id.use-case.ts
 │   │   ├── create-client.use-case.ts
 │   │   ├── update-client.use-case.ts
 │   │   ├── delete-client.use-case.ts
 │   │   ├── import-clients.use-case.ts
-│   │   └── export-clients*.use-case.ts
+│   │   ├── export-clients.use-case.ts
+│   │   └── export-clients-excel.use-case.ts
+│   │   └── export-clients-template.use-case.ts
 │   ├── commandes/
 │   │   ├── create-commande.use-case.ts
+│   │   ├── get-commandes.use-case.ts
+│   │   ├── get-commande-by-id.use-case.ts
 │   │   ├── add-paiement.use-case.ts
 │   │   ├── change-statut.use-case.ts
-│   │   └── get-commandes.use-case.ts
+│   │   └── change-statut.use-case.spec.ts   # Test unitaire
 │   ├── collectes/
 │   │   ├── create-collecte.use-case.ts
+│   │   ├── get-collectes.use-case.ts
+│   │   ├── get-collecte-by-id.use-case.ts
 │   │   └── get-collectes-stats.use-case.ts
 │   ├── factures/
 │   │   ├── generate-facture.use-case.ts
 │   │   ├── get-facture-pdf.use-case.ts
 │   │   └── send-facture-whatsapp.use-case.ts
 │   ├── notifications/
+│   │   ├── get-notifications.use-case.ts
+│   │   └── mark-as-read.use-case.ts
 │   ├── stats/
+│   │   └── get-dashboard.use-case.ts
 │   └── audit/
+│       └── get-audit-logs.use-case.ts
 │
 ├── domain/                                   # Couche Métier
 │   ├── entities/                             # Classes métier
 │   │   ├── user.entity.ts
 │   │   ├── client.entity.ts
 │   │   ├── commande.entity.ts
+│   │   ├── commande.entity.spec.ts          # Test unitaire
 │   │   ├── commande-item.entity.ts
 │   │   ├── collecte.entity.ts
+│   │   ├── collecte.entity.spec.ts          # Test unitaire
 │   │   ├── collecte-item.entity.ts
 │   │   ├── paiement.entity.ts
 │   │   ├── facture.entity.ts
 │   │   ├── notification.entity.ts
+│   │   ├── refresh-token.entity.ts
 │   │   └── audit-log.entity.ts
 │   ├── enums/                                # Constantes
 │   │   ├── role.enum.ts
@@ -125,7 +142,9 @@ src/
 │   │   ├── paiement-type.enum.ts
 │   │   ├── mode-paiement.enum.ts
 │   │   ├── facture-type.enum.ts
-│   │   └── notification-type.enum.ts
+│   │   ├── facture-statut.enum.ts
+│   │   ├── notification-type.enum.ts
+│   │   └── audit-action.enum.ts
 │   ├── exceptions/                           # Exceptions métier
 │   │   ├── invalid-credentials.exception.ts
 │   │   ├── client-not-found.exception.ts
@@ -141,7 +160,10 @@ src/
 │       │   ├── collecte.repository.ts
 │       │   ├── paiement.repository.ts
 │       │   ├── facture.repository.ts
-│       │   └── ...
+│       │   ├── notification.repository.ts
+│       │   ├── refresh-token.repository.ts
+│       │   ├── stats.repository.ts
+│       │   └── audit-log.repository.ts
 │       └── services/                          # Ports de services
 │           ├── hash.service.ts
 │           ├── token.service.ts
@@ -155,13 +177,20 @@ src/
 │   │       ├── prisma-user.repository.ts
 │   │       ├── prisma-client.repository.ts
 │   │       ├── prisma-commande.repository.ts
-│   │       └── ...
+│   │       ├── prisma-collecte.repository.ts
+│   │       ├── prisma-paiement.repository.ts
+│   │       ├── prisma-facture.repository.ts
+│   │       ├── prisma-notification.repository.ts
+│   │       ├── prisma-refresh-token.repository.ts
+│   │       ├── prisma-audit-log.repository.ts
+│   │       └── prisma-stats.repository.ts
 │   ├── services/
 │   │   ├── jwt-token.service.ts
 │   │   ├── bcrypt-hash.service.ts
 │   │   ├── token-blacklist.service.ts
 │   │   ├── pdf-generator.service.ts
-│   │   └── whatsapp.service.ts
+│   │   ├── whatsapp.service.ts
+│   │   └── file-storage.service.ts
 │   └── filters/
 │       └── domain-exception.filter.ts
 │
@@ -172,12 +201,25 @@ src/
     │   ├── guards/
     │   │   ├── jwt-auth.guard.ts
     │   │   ├── jwt.strategy.ts
+    │   │   ├── roles.decorator.ts
     │   │   └── roles.guard.ts
     │   └── dto/
     ├── clients/
+    │   ├── clients.controller.ts
+    │   ├── clients.module.ts
+    │   └── dto/
     ├── commandes/
+    │   ├── commandes.controller.ts
+    │   ├── commandes.module.ts
+    │   └── dto/
     ├── collectes/
+    │   ├── collectes.controller.ts
+    │   ├── collectes.module.ts
+    │   └── dto/
     ├── factures/
+    │   ├── factures.controller.ts
+    │   ├── factures.module.ts
+    │   └── dto/
     ├── notifications/
     ├── stats/
     └── audit/
@@ -189,16 +231,19 @@ src/
 
 | Catégorie | Technologie | Version |
 |-----------|-------------|---------|
-| Framework | NestJS | 11.x |
-| Langage | TypeScript | 5.x |
+| Framework | NestJS | 11.0.1 |
+| Langage | TypeScript | 5.7.3 |
 | Base de données | PostgreSQL | 14+ |
-| ORM | Prisma | 7.x |
+| ORM | Prisma | 7.4.2 |
 | Authentification | JWT + Refresh Tokens | - |
-| Validation | class-validator | - |
+| Validation | class-validator | 0.15.1 |
 | Documentation | Swagger/OpenAPI | - |
-| Excel | xlsx | - |
-| PDF | pdfmake | - |
+| Excel | xlsx | 0.18.5 |
+| PDF | pdfmake | 0.2.16 |
 | WhatsApp | Meta Cloud API | - |
+| Cache | Redis + cache-manager | - |
+| Rate Limiting | @nestjs/throttler | 6.5.0 |
+| Hash | bcryptjs | 3.0.3 |
 
 ---
 
@@ -266,8 +311,17 @@ enum NotificationType {
   ACOMPTE_RECU         // Acompte reçu sur une commande
   COMMANDE_PRETE       // Commande prête
   COMMANDE_FINALISEE   // Commande finalisée
-  IMPORT_TERMINE        // Import de clients terminé
+  IMPORT_TERMINE       // Import de clients terminé
   COMMANDE_EN_ATTENTE  // Commande en attente
+}
+
+enum AuditAction {
+  CREATE    // Création d'une entité
+  UPDATE    // Modification d'une entité
+  DELETE    // Suppression d'une entité
+  LOGIN     // Connexion utilisateur
+  IMPORT    // Import de données
+  EXPORT    // Export de données
 }
 ```
 
@@ -441,6 +495,7 @@ class AuditLog {
   entiteId: string;
   ancienneValeur?: JSON;
   nouvelleValeur?: JSON;
+  description?: string;        // Description de l'action
   createdAt: Date;
 }
 ```
@@ -536,7 +591,7 @@ class RefreshToken {
 │  Création   │────▶│  Modification│────▶│  Suppression│
 │  Client    │     │   Client    │     │   (Directeur│
 └─────────────┘     └─────────────┘     │    seul)    │
-                                         └─────────────┘
+                                          └─────────────┘
 ```
 
 **Import de Clients :**
@@ -763,6 +818,7 @@ Merci pour votre confiance!
 - **JWT (JSON Web Tokens)** pour l'authentification sans état
 - **Access Token** : Durée de vie courte (15 minutes)
 - **Refresh Token** : Durée de vie longue (7 jours), stocké en base avec hash
+- **Token Blacklist** : Les tokens révoqués sont blacklistés
 
 ### 8.2 Autorisation
 
@@ -775,6 +831,7 @@ Merci pour votre confiance!
 - **Mot de passe** : Hashé avec bcrypt (salt rounds: 10)
 - **Refresh tokens** : Hashés avant stockage en base
 - **Audit** : Toutes les actions sensibles sont journalisées
+- **Rate Limiting** : Limitation des requêtes (100 requêtes/10 secondes par défaut)
 
 ### 8.4 Exceptions de sécurité
 
@@ -795,6 +852,7 @@ Merci pour votre confiance!
 
 - Node.js 20+
 - PostgreSQL 14+
+- Redis (pour le cache)
 - npm ou yarn
 
 ### 9.2 Variables d'environnement (.env)
@@ -808,11 +866,14 @@ JWT_SECRET=votre_secret_jwt_très_long_et_complexe
 
 # Application
 PORT=3000
-FRONTEND_URL=http://localhost:5173
+APP_URL=http://localhost:3000
 
-# WhatsApp (Meta)
-WHATSAPP_TOKEN=your_meta_access_token
-WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id
+# Redis (Cache)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# WhatsApp Business
+WHATSAPP_BUSINESS_PHONE=221771234567
 ```
 
 ### 9.3 Commandes
@@ -840,6 +901,7 @@ docker-compose up --build
 # Tests
 npm run test
 npm run test:cov
+npm run test:watch
 ```
 
 ### 9.4 Accès Swagger
@@ -860,14 +922,30 @@ Une fois l'application démarrée :
 | Commercial | commercial@proplast.com | Test1234! |
 | Collecteur | collecteur@proplast.com | Test1234! |
 
-### 10.2 Résumé des tests
+### 10.2 Couverture des tests
+
+#### Tests unitaires (.spec.ts)
+
+| Fichier | Description |
+|---------|-------------|
+| `login.use-case.spec.ts` | Test de l'authentification |
+| `change-statut.use-case.spec.ts` | Test des transitions de statut |
+| `commande.entity.spec.ts` | Test de la logique métier Commande |
+| `collecte.entity.spec.ts` | Test de la logique métier Collecte |
+| `app.controller.spec.ts` | Test du controller principal |
+
+#### Tests E2E
+
+Configuration disponible dans `test/jest-e2e.json`
+
+### 10.3 Résumé des tests
 
 | Catégorie | Status |
 |-----------|--------|
-| Authentification | ✅ Tous les tests passent |
-| Clients | ✅ Tous les tests passent |
-| Commandes | ✅ Fonctionnel (transitions strictes) |
-| Collectes | ✅ Tous les tests passent |
+| Authentification | ✅ Tests unitaires |
+| Clients | ✅ Tests fonctionnels |
+| Commandes | ✅ Tests unitaires (transitions strictes) |
+| Collectes | ✅ Tests unitaires |
 | Factures | ✅ Implémenté |
 | Notifications | ✅ Fonctionnel |
 | Audit | ✅ Complet |

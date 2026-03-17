@@ -90,7 +90,7 @@ export class WhatsAppService {
 Votre ${typeLabel} N°${factureNumero} d'un montant de ${montant.toLocaleString('fr-FR')} XOF est disponible.
 
 Téléchargez votre facture ici: ${downloadLink}
-
+ 
 Merci pour votre confiance!
 PROPLAST`;
   }

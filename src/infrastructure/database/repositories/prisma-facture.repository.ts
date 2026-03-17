@@ -116,12 +116,26 @@ export class PrismaFactureRepository implements FactureRepository {
   async findAll(
     page: number,
     limit: number,
+    type?: FactureType,
+    search?: string,
   ): Promise<{ data: Facture[]; total: number }> {
     const skip = (page - 1) * limit;
+    const where: any = {};
+    if (type) where.type = type as any;
+    if (search) {
+      where.OR = [
+        { numero: { contains: search, mode: 'insensitive' } },
+        { commande: { reference: { contains: search, mode: 'insensitive' } } },
+        { commande: { acheteur: { nom: { contains: search, mode: 'insensitive' } } } },
+        { commande: { acheteur: { prenom: { contains: search, mode: 'insensitive' } } } },
+        { commande: { acheteur: { email: { contains: search, mode: 'insensitive' } } } },
+      ];
+    }
     const [data, total] = await Promise.all([
       this.prisma.facture.findMany({
         skip,
         take: limit,
+        where,
         include: {
           commande: {
             include: {
@@ -131,7 +145,7 @@ export class PrismaFactureRepository implements FactureRepository {
         },
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.facture.count(),
+      this.prisma.facture.count({ where }),
     ]);
     return {
       data: data.map((d) => this.toDomain(d)),

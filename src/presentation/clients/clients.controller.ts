@@ -105,7 +105,7 @@ export class ClientsController {
   @ApiResponse({ status: 401, description: 'Non authentifié' })
   async findAll(
     @Query('page') page = 1,
-    @Query('limit') limit = 10,
+    @Query('limit') limit = 5,
     @Query('search') search?: string,
     @Query('type') type?: ClientType,
     @Query('statut') statut?: ClientStatut,

@@ -31,6 +31,11 @@ export interface FactureData {
   produit: string;
   quantite: number;
   prixUnitaire: number;
+  items?: {
+    produit: string;
+    quantite: number;
+    prixUnitaire: number;
+  }[];
   montantHT: number;
   tva: number;
   montantTTC: number;
@@ -56,119 +61,124 @@ export class PdfGeneratorService {
 
   private createDocDefinition(data: FactureData): any {
     const isProforma = data.type === FactureType.PROFORMA;
-    const documentTitle = isProforma
-      ? 'FACTURE PROFORMA'
-      : 'FACTURE DÉFINITIVE';
+    const documentTitle = isProforma ? 'FACTURE PROFORMA' : 'FACTURE DÉFINITIVE';
 
     // Calculate TVA percentage from data
     const tvaPercentage =
       data.montantHT > 0 ? (data.tva / data.montantHT) * 100 : 0;
 
+    const items = (data.items && data.items.length > 0)
+      ? data.items.map((i) => ({
+        label: i.produit,
+        qty: i.quantite,
+        price: i.prixUnitaire,
+        total: i.quantite * i.prixUnitaire,
+      }))
+      : [
+          {
+            label: data.produit,
+            qty: data.quantite,
+            price: data.prixUnitaire,
+            total: data.quantite * data.prixUnitaire,
+          },
+        ];
+
     return {
+      pageMargins: [40, 40, 40, 40],
       content: [
         // Header
         {
           columns: [
             {
               width: '*',
-              text: 'PROPLAST',
-              style: 'companyName',
+              stack: [
+                { text: 'PROPLAST', style: 'companyName' },
+                {
+                  text: 'Zone Industrielle de Dakar\nSénégal, BP 12345\ncontact@proplast.sn',
+                  style: 'companySub',
+                },
+              ],
             },
             {
               width: 'auto',
-              text: documentTitle,
-              style: 'documentType',
+              stack: [
+                {
+                  text: documentTitle,
+                  style: 'documentType',
+                },
+                { text: `N° ${data.numero}`, style: 'invoiceNumber' },
+                { text: `Date: ${this.formatDate(data.date)}`, style: 'invoiceDate' },
+              ],
+              alignment: 'right',
             },
           ],
         },
         { text: '\n' },
 
-        // Invoice details
+        // Client info box
         {
-          columns: [
-            {
-              width: '*',
-              stack: [
-                { text: 'PROPLAST', style: 'bold' },
-                { text: 'Dakar, Sénégal', style: 'small' },
-                { text: 'Tel: +221 77 123 45 67', style: 'small' },
-              ],
-            },
-            {
-              width: 'auto',
-              stack: [
-                { text: `N°: ${data.numero}`, style: 'bold' },
-                { text: `Date: ${this.formatDate(data.date)}`, style: 'small' },
+          table: {
+            widths: ['*'],
+            body: [
+              [
                 {
-                  text: isProforma ? 'Type: PROFORMA' : 'Type: DÉFINITIVE',
-                  style: 'small',
+                  stack: [
+                    { text: 'FACTURÉ À :', style: 'sectionTitle' },
+                    {
+                      text: `${data.client.prenom || ''} ${data.client.nom}`.trim(),
+                      style: 'clientName',
+                    },
+                    {
+                      text: [
+                        data.client.adresse ? `${data.client.adresse}\n` : '',
+                        data.client.email ? `${data.client.email}` : '',
+                        data.client.telephone ? ` | ${data.client.telephone}` : '',
+                      ].join(''),
+                      style: 'clientMeta',
+                    },
+                  ],
+                  margin: [0, 2, 0, 2],
                 },
               ],
-            },
-          ],
+            ],
+          },
+          layout: {
+            fillColor: () => '#F8FAFC',
+            hLineWidth: () => 0,
+            vLineWidth: () => 0,
+          },
         },
-        { text: '\n\n' },
-
-        // Client info
-        {
-          text: 'CLIENT:',
-          style: 'sectionTitle',
-        },
-        {
-          text: `${data.client.prenom || ''} ${data.client.nom}`.trim(),
-          style: 'clientName',
-        },
-        {
-          text: [
-            data.client.email ? `Email: ${data.client.email}\n` : '',
-            data.client.telephone ? `Tél: ${data.client.telephone}\n` : '',
-            data.client.adresse ? `Adresse: ${data.client.adresse}` : '',
-          ].join(''),
-          style: 'small',
-        },
-        { text: '\n\n' },
+        { text: '\n' },
 
         // Products table
         {
+          text: 'DÉTAIL DE LA COMMANDE',
+          style: 'tableTitle',
+          margin: [0, 0, 0, 6],
+        },
+        {
           table: {
             headerRows: 1,
-            widths: ['*', 'auto', 'auto', 'auto', 'auto'],
+            widths: ['*', 60, 90, 90],
             body: [
               [
                 { text: 'Désignation', style: 'tableHeader' },
                 { text: 'Qté', style: 'tableHeader', alignment: 'center' },
-                { text: 'P.U', style: 'tableHeader', alignment: 'right' },
-                {
-                  text: 'Montant HT',
-                  style: 'tableHeader',
-                  alignment: 'right',
-                },
-                { text: 'TVA', style: 'tableHeader', alignment: 'right' },
+                { text: 'Prix Unit. (FCFA)', style: 'tableHeader', alignment: 'right' },
+                { text: 'Sous-total (FCFA)', style: 'tableHeader', alignment: 'right' },
               ],
-              [
-                { text: data.produit, style: 'tableCell' },
-                {
-                  text: data.quantite.toString(),
-                  style: 'tableCell',
-                  alignment: 'center',
-                },
-                {
-                  text: this.formatCurrency(data.prixUnitaire),
-                  style: 'tableCell',
-                  alignment: 'right',
-                },
-                {
-                  text: this.formatCurrency(data.montantHT),
-                  style: 'tableCell',
-                  alignment: 'right',
-                },
-                {
-                  text: this.formatCurrency(data.tva),
-                  style: 'tableCell',
-                  alignment: 'right',
-                },
-              ],
+              ...items.map((i) => ([
+                { text: i.label, style: 'tableCell' },
+                { text: String(i.qty), style: 'tableCell', alignment: 'center' },
+                { text: this.formatCurrency(i.price), style: 'tableCell', alignment: 'right' },
+                { text: this.formatCurrency(i.total), style: 'tableCellBold', alignment: 'right' },
+              ])),
             ],
+          },
+          layout: {
+            fillColor: (rowIndex: number) => (rowIndex === 0 ? '#F1F5F9' : null),
+            hLineColor: () => '#E2E8F0',
+            vLineColor: () => '#E2E8F0',
           },
         },
         { text: '\n' },
@@ -183,7 +193,7 @@ export class PdfGeneratorService {
                 widths: ['*', 'auto'],
                 body: [
                   [
-                    { text: 'Montant HT:', style: 'totalLabel' },
+                    { text: 'Total HT', style: 'totalLabel' },
                     {
                       text: this.formatCurrency(data.montantHT),
                       style: 'totalValue',
@@ -192,7 +202,7 @@ export class PdfGeneratorService {
                   ],
                   [
                     {
-                      text: `TVA (${tvaPercentage.toFixed(0)}%):`,
+                      text: `TVA (${tvaPercentage.toFixed(0)}%)`,
                       style: 'totalLabel',
                     },
                     {
@@ -202,10 +212,36 @@ export class PdfGeneratorService {
                     },
                   ],
                   [
-                    { text: 'Montant TTC:', style: 'totalLabelBold' },
+                    { text: 'Total TTC', style: 'totalLabelBold' },
                     {
                       text: this.formatCurrency(data.montantTTC),
                       style: 'totalValueBold',
+                      alignment: 'right',
+                    },
+                  ],
+                  [
+                    { text: 'Acompte', style: 'totalLabelSmall' },
+                    {
+                      text: this.formatCurrency(data.acomteVerse || 0),
+                      style: 'totalValueSmall',
+                      alignment: 'right',
+                    },
+                  ],
+                  [
+                    { text: 'Solde réglé', style: 'totalLabelSmall' },
+                    {
+                      text: this.formatCurrency(
+                        (data.acomteVerse || 0) - (data.soldeRestant || 0),
+                      ),
+                      style: 'totalValueSmall',
+                      alignment: 'right',
+                    },
+                  ],
+                  [
+                    { text: 'Solde restant', style: 'totalLabelBold' },
+                    {
+                      text: this.formatCurrency(data.soldeRestant || 0),
+                      style: 'totalValueGreen',
                       alignment: 'right',
                     },
                   ],
@@ -215,97 +251,57 @@ export class PdfGeneratorService {
             },
           ],
         },
-
-        // Payment info for proforma
-        ...(isProforma && data.acomteVerse !== undefined
-          ? [
-              { text: '\n\n' },
-              {
-                text: 'INFORMATIONS DE PAIEMENT:',
-                style: 'sectionTitle',
-              },
-              {
-                text: [
-                  `Acompte versé: ${this.formatCurrency(data.acomteVerse)}\n`,
-                  `Solde restant: ${this.formatCurrency(data.soldeRestant || 0)}`,
-                ],
-                style: 'small',
-              },
-            ]
-          : []),
-
-        // Footer
+        { text: '\n' },
         {
-          text: '\n\n\n',
+          text: 'Merci pour votre confiance — Proplast © 2026',
+          style: 'footer',
         },
         {
-          text: [
-            'Merci de votre confiance!\n',
-            'Conditions de paiement: 50% à la commande, 50% à la livraison\n',
-            'Délai de validité: 30 jours',
-          ],
-          style: 'footer',
+          text: `Document généré automatiquement le ${this.formatDate(
+            data.date,
+          )}`,
+          style: 'footerSub',
         },
       ],
 
       styles: {
-        companyName: {
-          fontSize: 24,
-          bold: true,
-          color: '#1a365d',
-        },
+        companyName: { fontSize: 22, bold: true, color: '#0F172A' },
+        companySub: { fontSize: 9, color: '#64748B' },
         documentType: {
-          fontSize: 18,
-          bold: true,
-          color: isProforma ? '#805ad5' : '#38a169',
-        },
-        sectionTitle: {
-          fontSize: 12,
-          bold: true,
-          color: '#2d3748',
-          margin: [0, 10, 0, 5],
-        },
-        clientName: {
           fontSize: 14,
           bold: true,
+          color: '#2563EB',
+          uppercase: true,
         },
-        bold: {
-          bold: true,
-        },
-        small: {
-          fontSize: 10,
-          color: '#4a5568',
-        },
-        tableHeader: {
-          fontSize: 10,
-          bold: true,
-          color: '#2d3748',
-          fillColor: '#edf2f7',
-        },
-        tableCell: {
-          fontSize: 10,
-        },
-        totalLabel: {
-          fontSize: 10,
-          color: '#4a5568',
-        },
-        totalValue: {
-          fontSize: 10,
-        },
-        totalLabelBold: {
-          fontSize: 12,
-          bold: true,
-        },
-        totalValueBold: {
-          fontSize: 12,
-          bold: true,
-          color: '#1a365d',
-        },
-        footer: {
+        invoiceNumber: { fontSize: 10, bold: true, color: '#0F172A' },
+        invoiceDate: { fontSize: 9, color: '#64748B' },
+        sectionTitle: {
           fontSize: 9,
-          color: '#718096',
-          alignment: 'center',
+          bold: true,
+          color: '#94A3B8',
+          uppercase: true,
+          margin: [0, 0, 0, 4],
         },
+        clientName: { fontSize: 12, bold: true, color: '#0F172A' },
+        clientMeta: { fontSize: 9, color: '#475569' },
+        tableTitle: {
+          fontSize: 9,
+          bold: true,
+          color: '#0F172A',
+          uppercase: true,
+        },
+        tableHeader: { fontSize: 9, bold: true, color: '#64748B' },
+        tableCell: { fontSize: 9, color: '#0F172A' },
+        tableCellBold: { fontSize: 9, bold: true, color: '#0F172A' },
+        totalLabel: { fontSize: 9, color: '#64748B' },
+        totalValue: { fontSize: 9, color: '#0F172A' },
+        totalLabelSmall: { fontSize: 8, color: '#94A3B8' },
+        totalValueSmall: { fontSize: 8, color: '#64748B' },
+        totalLabelBold: { fontSize: 9, bold: true, color: '#0F172A' },
+        totalValueBold: { fontSize: 11, bold: true, color: '#2563EB' },
+        totalValueGreen: { fontSize: 9, bold: true, color: '#059669' },
+        footer: { fontSize: 8, color: '#94A3B8', alignment: 'center' },
+        footerSub: { fontSize: 8, color: '#CBD5E1', alignment: 'center' },
       },
 
       defaultStyle: {},

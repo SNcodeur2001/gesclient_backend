@@ -106,7 +106,7 @@ export class CommandesController {
   })
   async findAll(
     @Query('page') page = 1,
-    @Query('limit') limit = 10,
+    @Query('limit') limit = 5,
     @Query('search') search?: string,
     @Query('statut') statut?: CommandeStatut,
     @Query('type') type?: CommandeType,

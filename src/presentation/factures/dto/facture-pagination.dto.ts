@@ -1,5 +1,6 @@
-import { IsOptional, IsInt, Min, Max } from 'class-validator';
+import { IsOptional, IsInt, Min, Max, IsEnum, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
+import { FactureType } from '../../../domain/enums/facture-type.enum';
 
 export class FacturePaginationDto {
   @IsOptional()
@@ -14,4 +15,12 @@ export class FacturePaginationDto {
   @Min(1)
   @Max(100)
   limit?: number = 20;
+
+  @IsOptional()
+  @IsEnum(FactureType)
+  type?: FactureType;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
 }

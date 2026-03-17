@@ -13,6 +13,7 @@ export class PrismaCollecteRepository implements CollecteRepository {
       include: {
         apporteur: true,
         collecteur: true,
+        items: true,
       },
     });
     return raw ? this.toDomain(raw) : null;
@@ -75,7 +76,7 @@ export class PrismaCollecteRepository implements CollecteRepository {
     const [raws, total, aggregation] = await Promise.all([
       this.prisma.collecte.findMany({
         where,
-        include: { apporteur: true, collecteur: true },
+        include: { apporteur: true, collecteur: true, items: true },
         skip,
         take: filters.limit,
         orderBy: { createdAt: 'desc' },
@@ -208,6 +209,16 @@ export class PrismaCollecteRepository implements CollecteRepository {
     collecte.notes = raw.notes;
     collecte.collecteurId = raw.collecteurId;
     collecte.createdAt = raw.createdAt;
+    if (Array.isArray(raw.items)) {
+      collecte.items = raw.items.map((item: any) => ({
+        id: item.id,
+        collecteId: item.collecteId,
+        typePlastique: item.typePlastique,
+        quantiteKg: item.quantiteKg,
+        prixUnitaire: item.prixUnitaire,
+        createdAt: item.createdAt,
+      }));
+    }
     // Relations enrichies
     (collecte as any).apporteur = raw.apporteur;
     (collecte as any).collecteur = raw.collecteur;
