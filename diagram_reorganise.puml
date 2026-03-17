@@ -1,0 +1,246 @@
+@startuml
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 70
+skinparam classAttributeIconSize 0
+
+' =================== ENUMS ===================
+
+enum Role {
+  DIRECTEUR
+  COMMERCIAL
+  COLLECTEUR
+}
+
+enum ClientType {
+  APPORTEUR
+  ACHETEUR
+}
+
+enum ClientStatut {
+  ACTIF
+  PROSPECT
+  INACTIF
+}
+
+enum CommandeType {
+  SUR_PLACE
+  A_DISTANCE
+}
+
+enum CommandeStatut {
+  EN_ATTENTE_ACOMPTE
+  EN_PREPARATION
+  PRETE
+  FINALISEE
+}
+
+enum PaiementType {
+  ACOMPTE
+  SOLDE
+}
+
+enum ModePaiement {
+  ESPECES
+  VIREMENT
+  CHEQUE
+  MOBILE_MONEY
+}
+
+enum FactureType {
+  PROFORMA
+  DEFINITIVE
+}
+
+enum FactureStatut {
+  GENEREE
+  ENVOYEE
+  TELECHARGE
+}
+
+enum NotificationType {
+  NOUVELLE_COLLECTE
+  ACOMPTE_RECU
+  COMMANDE_PRETE
+  COMMANDE_FINALISEE
+  IMPORT_TERMINE
+  COMMANDE_EN_ATTENTE
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  IMPORT
+  EXPORT
+}
+
+enum ImportStatut {
+  EN_COURS
+  TERMINE
+  ERREUR
+}
+
+' =================== CLASSES ===================
+
+together {
+  class User {
+    -nom: String
+    -prenom: String
+    -email: String
+    -role: Role
+    -actif: Boolean
+  }
+  enum Role
+}
+
+together {
+  class Client {
+    -nom: String
+    -prenom: String
+    -email: String
+    -telephone: String
+    -type: ClientType
+    -statut: ClientStatut
+    -totalRevenue: Float
+  }
+  enum ClientType
+  enum ClientStatut
+}
+
+together {
+  class Commande {
+    -reference: String
+    -type: CommandeType
+    -statut: CommandeStatut
+    -montantHT: Float
+    -tva: Float
+    -montantTTC: Float
+    -acompteMinimum: Float
+    -acompteVerse: Float
+    -soldeRestant: Float
+  }
+  class CommandeItem {
+    -produit: String
+    -quantite: Float
+    -prixUnitaire: Float
+  }
+  enum CommandeType
+  enum CommandeStatut
+}
+
+together {
+  class Collecte {
+    -montantTotal: Float
+    -quantiteKg: Float
+    -prixUnitaire: Float
+    -notes: String
+  }
+  class CollecteItem {
+    -typePlastique: String
+    -quantiteKg: Float
+    -prixUnitaire: Float
+  }
+}
+
+together {
+  class Paiement {
+    -type: PaiementType
+    -montant: Float
+    -modePaiement: ModePaiement
+  }
+  enum PaiementType
+  enum ModePaiement
+}
+
+together {
+  class Facture {
+    -numero: String
+    -type: FactureType
+    -statut: FactureStatut
+    -montantHT: Float
+    -tva: Float
+    -montantTTC: Float
+    -envoyeeWhatsApp: Boolean
+  }
+  enum FactureType
+  enum FactureStatut
+}
+
+together {
+  class Notification {
+    -type: NotificationType
+    -message: String
+    -lu: Boolean
+  }
+  enum NotificationType
+}
+
+together {
+  class AuditLog {
+    -action: AuditAction
+    -entite: String
+    -entiteId: String
+    -ancienneValeur: JSON
+    -nouvelleValeur: JSON
+  }
+  enum AuditAction
+}
+
+together {
+  class RefreshToken {
+    -tokenHash: String
+    -expiresAt: DateTime
+    -revokedAt: DateTime
+  }
+  class Import {
+    -filename: String
+    -totalRows: Int
+    -validRows: Int
+    -invalidRows: Int
+    -statut: ImportStatut
+    -errors: JSON
+  }
+  enum ImportStatut
+}
+
+' =================== RELATIONS ENUMS ===================
+
+User ..> Role
+Client ..> ClientType
+Client ..> ClientStatut
+Commande ..> CommandeType
+Commande ..> CommandeStatut
+Paiement ..> PaiementType
+Paiement ..> ModePaiement
+Facture ..> FactureType
+Facture ..> FactureStatut
+Notification ..> NotificationType
+AuditLog ..> AuditAction
+Import ..> ImportStatut
+
+' =================== RELATIONS CLASSES ===================
+
+User "1" -- "0..*" Client : assigne
+User "1" -- "0..*" Commande : commercial
+User "1" -- "0..*" Collecte : collecteur
+User "1" -- "0..*" Notification : reçoit
+User "1" -- "0..*" AuditLog : génère
+User "1" -- "0..*" RefreshToken : possède
+User "1" -- "0..*" Paiement : valide
+User "1" -- "0..*" Facture : génère
+User "1" -- "0..*" Import : lance
+
+Client "1" -- "0..*" Commande : acheteur
+Client "1" -- "0..*" Collecte : apporteur
+Client "1" -- "0..*" Notification : concerné
+
+Commande "1" -- "1..*" CommandeItem : contient
+Commande "1" -- "0..*" Paiement : reçoit
+Commande "1" -- "0..*" Facture : génère
+Commande "1" -- "0..*" Notification : déclenche
+
+Collecte "1" -- "1..*" CollecteItem : contient
+
+@enduml

@@ -1,0 +1,55 @@
+@startuml
+actor "Utilisateur" as User
+participant "Frontend" as Front
+participant "Backend" as Back
+database "PostgreSQL" as DB
+database "Redis" as Redis
+
+title Séquence - Déconnexion (Logout)
+
+User -> Front: Clique sur "Déconnexion"
+activate Front
+
+Front -> Back: POST /auth/logout\n(access_token + refresh_token)
+activate Back
+
+note right of Back
+  Problème sans Redis :
+  L'access_token reste valide 15 min
+  même après déconnexion
+end note
+
+Back -> Redis: Blacklister l'access_token\n(clé: blacklist:<token>, TTL: 15min)
+activate Redis
+Redis --> Back: Confirmation
+deactivate Redis
+
+Back -> DB: Révoquer le refresh_token\n(revokedAt = maintenant)
+activate DB
+DB --> Back: Confirmation
+deactivate DB
+
+Back --> Front: 200 OK - Déconnecté
+Front --> User: Redirection vers la page de login
+deactivate Back
+deactivate Front
+
+' ===================== REQUÊTE APRÈS LOGOUT =====================
+
+User -> Front: Tente d'accéder à une page
+activate Front
+
+Front -> Back: GET /clients\n(access_token blacklisté)
+activate Back
+
+Back -> Redis: Vérifier si token blacklisté
+activate Redis
+Redis --> Back: Token présent (blacklisté)
+deactivate Redis
+
+Back --> Front: 401 Unauthorized\n(token révoqué)
+Front --> User: Redirection vers la page de login
+deactivate Back
+deactivate Front
+
+@enduml
