@@ -13,6 +13,23 @@ import { CommandeType } from '../../../domain/enums/commande-type.enum';
 export class PrismaCommandeRepository implements CommandeRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async withRetry<T>(label: string, fn: () => Promise<T>, attempts = 2): Promise<T> {
+    let lastError: unknown;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await fn();
+      } catch (err: any) {
+        lastError = err;
+        if (err?.code !== 'ETIMEDOUT' || i === attempts - 1) {
+          throw err;
+        }
+        const delayMs = 200 + i * 200;
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+    throw lastError;
+  }
+
   async findById(id: string): Promise<Commande | null> {
     const raw = await this.prisma.commande.findUnique({
       where: { id },
@@ -66,40 +83,48 @@ export class PrismaCommandeRepository implements CommandeRepository {
     const skip = (filters.page - 1) * filters.limit;
 
     const [raws, total, caAgg, enCours, enAttente] = await Promise.all([
-      this.prisma.commande.findMany({
-        where,
-        include: {
-          acheteur: true,
-          commercial: true,
-          paiements: true,
-        },
-        skip,
-        take: filters.limit,
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.commande.count({ where }),
-      this.prisma.commande.aggregate({
-        where: {
-          ...where,
-          statut: CommandeStatut.FINALISEE,
-          createdAt: { gte: debutMois },
-        },
-        _sum: { montantTTC: true },
-      }),
-      this.prisma.commande.count({
-        where: {
-          ...where,
-          statut: {
-            notIn: [CommandeStatut.FINALISEE],
+      this.withRetry('findManyCommandes', () =>
+        this.prisma.commande.findMany({
+          where,
+          include: {
+            acheteur: true,
+            commercial: true,
+            paiements: true,
           },
-        },
-      }),
-      this.prisma.commande.count({
-        where: {
-          ...where,
-          statut: CommandeStatut.EN_PREPARATION,
-        },
-      }),
+          skip,
+          take: filters.limit,
+          orderBy: { createdAt: 'desc' },
+        }),
+      ),
+      this.withRetry('countCommandes', () => this.prisma.commande.count({ where })),
+      this.withRetry('aggregateCA', () =>
+        this.prisma.commande.aggregate({
+          where: {
+            ...where,
+            statut: CommandeStatut.FINALISEE,
+            createdAt: { gte: debutMois },
+          },
+          _sum: { montantTTC: true },
+        }),
+      ),
+      this.withRetry('countEnCours', () =>
+        this.prisma.commande.count({
+          where: {
+            ...where,
+            statut: {
+              notIn: [CommandeStatut.FINALISEE],
+            },
+          },
+        }),
+      ),
+      this.withRetry('countEnAttente', () =>
+        this.prisma.commande.count({
+          where: {
+            ...where,
+            statut: CommandeStatut.EN_PREPARATION,
+          },
+        }),
+      ),
     ]);
 
     return {
@@ -148,7 +173,7 @@ export class PrismaCommandeRepository implements CommandeRepository {
   }
 
   async countAll(): Promise<number> {
-    return this.prisma.commande.count();
+    return this.withRetry('countAllCommandes', () => this.prisma.commande.count());
   }
 
   private toDomain(raw: any): Commande {
