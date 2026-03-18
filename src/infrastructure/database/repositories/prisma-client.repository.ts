@@ -27,17 +27,21 @@ export class PrismaClientRepository implements ClientRepository {
   }
 
   async findById(id: string): Promise<Client | null> {
-    const raw = await this.prisma.client.findFirst({
-      where: { id, deletedAt: null },
-      include: { assignedUser: true },
-    });
+    const raw = await this.withRetry('findClientById', () =>
+      this.prisma.client.findFirst({
+        where: { id, deletedAt: null },
+        include: { assignedUser: true },
+      }),
+    );
     return raw ? this.toDomain(raw) : null;
   }
 
   async findByEmail(email: string): Promise<Client | null> {
-    const raw = await this.prisma.client.findFirst({
-      where: { email, deletedAt: null },
-    });
+    const raw = await this.withRetry('findClientByEmail', () =>
+      this.prisma.client.findFirst({
+        where: { email, deletedAt: null },
+      }),
+    );
     return raw ? this.toDomain(raw) : null;
   }
 
