@@ -8,6 +8,23 @@ import { ClientType } from '../../../domain/enums/client-type.enum';
 export class PrismaStatsRepository implements StatsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async withRetry<T>(label: string, fn: () => Promise<T>, attempts = 2): Promise<T> {
+    let lastError: unknown;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await fn();
+      } catch (err: any) {
+        lastError = err;
+        if (err?.code !== 'ETIMEDOUT' || i === attempts - 1) {
+          throw err;
+        }
+        const delayMs = 200 + i * 200;
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+    throw lastError;
+  }
+
   async getDashboard(): Promise<{
     collecte: {
       tonnageMois: number;
@@ -44,132 +61,127 @@ export class PrismaStatsRepository implements StatsRepository {
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
-    // Execute 10 parallel queries
+    // Execute queries in small batches to reduce connection spikes
     const [
-      // Collecte stats
       currentMonthCollecte,
       lastMonthCollecte,
-
-      // Commercial stats
       currentMonthCommandes,
       lastMonthCommandes,
+    ] = await Promise.all([
+      this.withRetry('currentMonthCollecte', () =>
+        this.prisma.collecte.aggregate({
+          where: { createdAt: { gte: startOfMonth } },
+          _sum: { quantiteKg: true, montantTotal: true },
+        }),
+      ),
+      this.withRetry('lastMonthCollecte', () =>
+        this.prisma.collecte.aggregate({
+          where: {
+            createdAt: {
+              gte: startOfLastMonth,
+              lte: endOfLastMonth,
+            },
+          },
+          _sum: { quantiteKg: true, montantTotal: true },
+        }),
+      ),
+      this.withRetry('currentMonthCommandes', () =>
+        this.prisma.commande.aggregate({
+          where: { createdAt: { gte: startOfMonth } },
+          _sum: { montantTTC: true },
+        }),
+      ),
+      this.withRetry('lastMonthCommandes', () =>
+        this.prisma.commande.aggregate({
+          where: {
+            createdAt: {
+              gte: startOfLastMonth,
+              lte: endOfLastMonth,
+            },
+          },
+          _sum: { montantTTC: true },
+        }),
+      ),
+    ]);
+
+    const [
       commandesEnCours,
       enAttenteAcompte,
-
-      // Client stats
       totalApporteurs,
       totalAcheteurs,
       nouveauxClients,
-
-      // Top apporteurs
       topApporteursRaw,
-
-      // Top acheteurs
       topAcheteursRaw,
-
-      // Evolution (last 6 months)
-      evolutionCollecteRaw,
-      evolutionCA,
     ] = await Promise.all([
-      // 1. Current month collecte
-      this.prisma.collecte.aggregate({
-        where: { createdAt: { gte: startOfMonth } },
-        _sum: { quantiteKg: true, montantTotal: true },
-      }),
-
-      // 2. Last month collecte
-      this.prisma.collecte.aggregate({
-        where: {
-          createdAt: {
-            gte: startOfLastMonth,
-            lte: endOfLastMonth,
+      this.withRetry('commandesEnCours', () =>
+        this.prisma.commande.count({
+          where: {
+            statut: { in: [CommandeStatut.EN_PREPARATION, CommandeStatut.PRETE] },
           },
-        },
-        _sum: { quantiteKg: true, montantTotal: true },
-      }),
-
-      // 3. Current month commandes CA
-      this.prisma.commande.aggregate({
-        where: { createdAt: { gte: startOfMonth } },
-        _sum: { montantTTC: true },
-      }),
-
-      // 4. Last month commandes CA
-      this.prisma.commande.aggregate({
-        where: {
-          createdAt: {
-            gte: startOfLastMonth,
-            lte: endOfLastMonth,
+        }),
+      ),
+      this.withRetry('enAttenteAcompte', () =>
+        this.prisma.commande.count({
+          where: { statut: CommandeStatut.EN_PREPARATION },
+        }),
+      ),
+      this.withRetry('totalApporteurs', () =>
+        this.prisma.client.count({
+          where: { type: ClientType.APPORTEUR, deletedAt: null },
+        }),
+      ),
+      this.withRetry('totalAcheteurs', () =>
+        this.prisma.client.count({
+          where: { type: ClientType.ACHETEUR, deletedAt: null },
+        }),
+      ),
+      this.withRetry('nouveauxClients', () =>
+        this.prisma.client.count({
+          where: {
+            createdAt: { gte: startOfMonth },
+            deletedAt: null,
           },
-        },
-        _sum: { montantTTC: true },
-      }),
+        }),
+      ),
+      this.withRetry('topApporteurs', () =>
+        this.prisma.collecte.groupBy({
+          by: ['apporteurId'],
+          _sum: { quantiteKg: true, montantTotal: true },
+          orderBy: { _sum: { montantTotal: 'desc' } },
+          take: 5,
+        }),
+      ),
+      this.withRetry('topAcheteurs', () =>
+        this.prisma.commande.groupBy({
+          by: ['acheteurId'],
+          _sum: { montantTTC: true },
+          orderBy: { _sum: { montantTTC: 'desc' } },
+          take: 5,
+        }),
+      ),
+    ]);
 
-      // 5. Commandes en cours
-      this.prisma.commande.count({
-        where: {
-          statut: { in: [CommandeStatut.EN_PREPARATION, CommandeStatut.PRETE] },
-        },
-      }),
-
-      // 6. En attente d'acompte
-      this.prisma.commande.count({
-        where: { statut: CommandeStatut.EN_PREPARATION },
-      }),
-
-      // 7. Total apporteurs
-      this.prisma.client.count({
-        where: { type: ClientType.APPORTEUR, deletedAt: null },
-      }),
-
-      // 8. Total acheteurs
-      this.prisma.client.count({
-        where: { type: ClientType.ACHETEUR, deletedAt: null },
-      }),
-
-      // 9. Nouveaux clients ce mois
-      this.prisma.client.count({
-        where: {
-          createdAt: { gte: startOfMonth },
-          deletedAt: null,
-        },
-      }),
-
-      // 10. Top apporteurs
-      this.prisma.collecte.groupBy({
-        by: ['apporteurId'],
-        _sum: { quantiteKg: true, montantTotal: true },
-        orderBy: { _sum: { montantTotal: 'desc' } },
-        take: 5,
-      }),
-
-      // 11. Top acheteurs
-      this.prisma.commande.groupBy({
-        by: ['acheteurId'],
-        _sum: { montantTTC: true },
-        orderBy: { _sum: { montantTTC: 'desc' } },
-        take: 5,
-      }),
-
-      // 12. Evolution collecte (last 6 months)
-      this.prisma.collecte.findMany({
-        where: {
-          createdAt: {
-            gte: new Date(now.getFullYear(), now.getMonth() - 5, 1),
+    const [evolutionCollecteRaw, evolutionCA] = await Promise.all([
+      this.withRetry('evolutionCollecte', () =>
+        this.prisma.collecte.findMany({
+          where: {
+            createdAt: {
+              gte: new Date(now.getFullYear(), now.getMonth() - 5, 1),
+            },
           },
-        },
-        select: { createdAt: true, quantiteKg: true },
-      }),
-
-      // 13. Evolution CA (last 6 months)
-      this.prisma.commande.findMany({
-        where: {
-          createdAt: {
-            gte: new Date(now.getFullYear(), now.getMonth() - 5, 1),
+          select: { createdAt: true, quantiteKg: true },
+        }),
+      ),
+      this.withRetry('evolutionCA', () =>
+        this.prisma.commande.findMany({
+          where: {
+            createdAt: {
+              gte: new Date(now.getFullYear(), now.getMonth() - 5, 1),
+            },
           },
-        },
-        select: { createdAt: true, montantTTC: true },
-      }),
+          select: { createdAt: true, montantTTC: true },
+        }),
+      ),
     ]);
 
     // Calculate variations
