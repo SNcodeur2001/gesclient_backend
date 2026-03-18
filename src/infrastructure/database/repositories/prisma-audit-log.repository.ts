@@ -8,8 +8,25 @@ import { AuditAction } from '../../../domain/enums/audit-action.enum';
 export class PrismaAuditLogRepository implements AuditLogRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async withRetry<T>(label: string, fn: () => Promise<T>, attempts = 2): Promise<T> {
+    let lastError: unknown;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await fn();
+      } catch (err: any) {
+        lastError = err;
+        if (err?.code !== 'ETIMEDOUT' || i === attempts - 1) {
+          throw err;
+        }
+        const delayMs = 200 + i * 200;
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+    throw lastError;
+  }
+
   async log(data: Omit<AuditLog, 'id' | 'createdAt'>): Promise<void> {
-    await this.prisma.auditLog.create({ data });
+    await this.withRetry('createAuditLog', () => this.prisma.auditLog.create({ data }));
   }
 
   async findAll(filters: {
@@ -33,14 +50,16 @@ export class PrismaAuditLogRepository implements AuditLogRepository {
 
     const skip = (filters.page - 1) * filters.limit;
     const [raws, total] = await Promise.all([
-      this.prisma.auditLog.findMany({
-        where,
-        include: { user: true },
-        skip,
-        take: filters.limit,
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.auditLog.count({ where }),
+      this.withRetry('findManyAuditLogs', () =>
+        this.prisma.auditLog.findMany({
+          where,
+          include: { user: true },
+          skip,
+          take: filters.limit,
+          orderBy: { createdAt: 'desc' },
+        }),
+      ),
+      this.withRetry('countAuditLogs', () => this.prisma.auditLog.count({ where })),
     ]);
 
     return {
