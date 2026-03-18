@@ -103,23 +103,27 @@ export class PrismaClientRepository implements ClientRepository {
   }
 
   async create(data: Omit<Client, 'id' | 'createdAt'>): Promise<Client> {
-    const raw = await this.prisma.client.create({ data });
+    const raw = await this.withRetry('createClient', () => this.prisma.client.create({ data }));
     return this.toDomain(raw);
   }
 
   async update(id: string, data: Partial<Client>): Promise<Client> {
-    const raw = await this.prisma.client.update({
-      where: { id },
-      data,
-    });
+    const raw = await this.withRetry('updateClient', () =>
+      this.prisma.client.update({
+        where: { id },
+        data,
+      }),
+    );
     return this.toDomain(raw);
   }
 
   async softDelete(id: string): Promise<void> {
-    await this.prisma.client.update({
-      where: { id },
-      data: { deletedAt: new Date() },
-    });
+    await this.withRetry('softDeleteClient', () =>
+      this.prisma.client.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      }),
+    );
   }
 
   async exportAll(filters: {

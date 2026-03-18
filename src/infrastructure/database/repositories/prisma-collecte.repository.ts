@@ -25,14 +25,16 @@ export class PrismaCollecteRepository implements CollecteRepository {
   }
 
   async findById(id: string): Promise<Collecte | null> {
-    const raw = await this.prisma.collecte.findUnique({
-      where: { id },
-      include: {
-        apporteur: true,
-        collecteur: true,
-        items: true,
-      },
-    });
+    const raw = await this.withRetry('findCollecteById', () =>
+      this.prisma.collecte.findUnique({
+        where: { id },
+        include: {
+          apporteur: true,
+          collecteur: true,
+          items: true,
+        },
+      }),
+    );
     return raw ? this.toDomain(raw) : null;
   }
 
@@ -50,13 +52,15 @@ export class PrismaCollecteRepository implements CollecteRepository {
       };
     }
 
-    const raw = await this.prisma.collecte.create({
-      data: prismaData,
-      include: {
-        apporteur: true,
-        collecteur: true,
-      },
-    });
+    const raw = await this.withRetry('createCollecte', () =>
+      this.prisma.collecte.create({
+        data: prismaData,
+        include: {
+          apporteur: true,
+          collecteur: true,
+        },
+      }),
+    );
     return this.toDomain(raw);
   }
 

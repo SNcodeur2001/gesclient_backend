@@ -31,15 +31,17 @@ export class PrismaCommandeRepository implements CommandeRepository {
   }
 
   async findById(id: string): Promise<Commande | null> {
-    const raw = await this.prisma.commande.findUnique({
-      where: { id },
-      include: {
-        acheteur: true,
-        commercial: true,
-        paiements: { orderBy: { createdAt: 'asc' } },
-        items: true,
-      },
-    });
+    const raw = await this.withRetry('findCommandeById', () =>
+      this.prisma.commande.findUnique({
+        where: { id },
+        include: {
+          acheteur: true,
+          commercial: true,
+          paiements: { orderBy: { createdAt: 'asc' } },
+          items: true,
+        },
+      }),
+    );
     return raw ? this.toDomain(raw) : null;
   }
 
@@ -152,23 +154,27 @@ export class PrismaCommandeRepository implements CommandeRepository {
       };
     }
 
-    const raw = await this.prisma.commande.create({
-      data: prismaData,
-      include: { acheteur: true, commercial: true },
-    });
+    const raw = await this.withRetry('createCommande', () =>
+      this.prisma.commande.create({
+        data: prismaData,
+        include: { acheteur: true, commercial: true },
+      }),
+    );
     return this.toDomain(raw);
   }
 
   async update(id: string, data: UpdateCommandeData): Promise<Commande> {
-    const raw = await this.prisma.commande.update({
-      where: { id },
-      data: data as any,
-      include: {
-        acheteur: true,
-        commercial: true,
-        paiements: true,
-      },
-    });
+    const raw = await this.withRetry('updateCommande', () =>
+      this.prisma.commande.update({
+        where: { id },
+        data: data as any,
+        include: {
+          acheteur: true,
+          commercial: true,
+          paiements: true,
+        },
+      }),
+    );
     return this.toDomain(raw);
   }
 
