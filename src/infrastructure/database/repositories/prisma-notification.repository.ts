@@ -8,12 +8,31 @@ import { NotificationType } from '../../../domain/enums/notification-type.enum';
 export class PrismaNotificationRepository implements NotificationRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async withRetry<T>(label: string, fn: () => Promise<T>, attempts = 2): Promise<T> {
+    let lastError: unknown;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await fn();
+      } catch (err: any) {
+        lastError = err;
+        if (err?.code !== 'ETIMEDOUT' || i === attempts - 1) {
+          throw err;
+        }
+        const delayMs = 200 + i * 200;
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+    throw lastError;
+  }
+
   async create(
     data: Omit<Notification, 'id' | 'createdAt' | 'lu'>,
   ): Promise<Notification> {
-    const raw = await this.prisma.notification.create({
-      data,
-    });
+    const raw = await this.withRetry('createNotification', () =>
+      this.prisma.notification.create({
+        data,
+      }),
+    );
     return this.toDomain(raw);
   }
 
@@ -25,13 +44,17 @@ export class PrismaNotificationRepository implements NotificationRepository {
     if (lu !== undefined) where.lu = lu;
 
     const [raws, totalNonLues] = await Promise.all([
-      this.prisma.notification.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.notification.count({
-        where: { userId, lu: false },
-      }),
+      this.withRetry('findManyNotifications', () =>
+        this.prisma.notification.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+        }),
+      ),
+      this.withRetry('countNotificationsNonLues', () =>
+        this.prisma.notification.count({
+          where: { userId, lu: false },
+        }),
+      ),
     ]);
 
     return {
@@ -41,17 +64,21 @@ export class PrismaNotificationRepository implements NotificationRepository {
   }
 
   async markAsRead(id: string, userId: string): Promise<void> {
-    await this.prisma.notification.updateMany({
-      where: { id, userId },
-      data: { lu: true },
-    });
+    await this.withRetry('markNotificationAsRead', () =>
+      this.prisma.notification.updateMany({
+        where: { id, userId },
+        data: { lu: true },
+      }),
+    );
   }
 
   async markAllAsRead(userId: string): Promise<number> {
-    const result = await this.prisma.notification.updateMany({
-      where: { userId, lu: false },
-      data: { lu: true },
-    });
+    const result = await this.withRetry('markAllNotificationsAsRead', () =>
+      this.prisma.notification.updateMany({
+        where: { userId, lu: false },
+        data: { lu: true },
+      }),
+    );
     return result.count;
   }
 
