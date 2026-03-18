@@ -9,6 +9,23 @@ import { ClientStatut } from '../../../domain/enums/client-statut.enum';
 export class PrismaClientRepository implements ClientRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async withRetry<T>(label: string, fn: () => Promise<T>, attempts = 2): Promise<T> {
+    let lastError: unknown;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await fn();
+      } catch (err: any) {
+        lastError = err;
+        if (err?.code !== 'ETIMEDOUT' || i === attempts - 1) {
+          throw err;
+        }
+        const delayMs = 200 + i * 200;
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+    throw lastError;
+  }
+
   async findById(id: string): Promise<Client | null> {
     const raw = await this.prisma.client.findFirst({
       where: { id, deletedAt: null },
@@ -46,25 +63,31 @@ export class PrismaClientRepository implements ClientRepository {
     const skip = (filters.page - 1) * filters.limit;
     const countActifsPromise =
       !filters.statut || filters.statut === ClientStatut.ACTIF
-        ? this.prisma.client.count({
-            where: { ...baseWhere, statut: ClientStatut.ACTIF },
-          })
+        ? this.withRetry('countActifs', () =>
+            this.prisma.client.count({
+              where: { ...baseWhere, statut: ClientStatut.ACTIF },
+            }),
+          )
         : Promise.resolve(0);
 
     const [raws, total, totalActifs, revenueAgg] = await Promise.all([
-      this.prisma.client.findMany({
-        where,
-        include: { assignedUser: true },
-        skip,
-        take: filters.limit,
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.client.count({ where }),
+      this.withRetry('findManyClients', () =>
+        this.prisma.client.findMany({
+          where,
+          include: { assignedUser: true },
+          skip,
+          take: filters.limit,
+          orderBy: { createdAt: 'desc' },
+        }),
+      ),
+      this.withRetry('countClients', () => this.prisma.client.count({ where })),
       countActifsPromise,
-      this.prisma.client.aggregate({
-        where,
-        _sum: { totalRevenue: true },
-      }),
+      this.withRetry('aggregateRevenue', () =>
+        this.prisma.client.aggregate({
+          where,
+          _sum: { totalRevenue: true },
+        }),
+      ),
     ]);
 
     return {
@@ -103,7 +126,9 @@ export class PrismaClientRepository implements ClientRepository {
     if (filters.type) where.type = filters.type;
     if (filters.statut) where.statut = filters.statut;
 
-    const raws = await this.prisma.client.findMany({ where });
+    const raws = await this.withRetry('exportClients', () =>
+      this.prisma.client.findMany({ where }),
+    );
     return raws.map((r) => this.toDomain(r));
   }
 
