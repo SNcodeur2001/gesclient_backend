@@ -7,6 +7,23 @@ import { Collecte } from '../../../domain/entities/collecte.entity';
 export class PrismaCollecteRepository implements CollecteRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async withRetry<T>(label: string, fn: () => Promise<T>, attempts = 2): Promise<T> {
+    let lastError: unknown;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await fn();
+      } catch (err: any) {
+        lastError = err;
+        if (err?.code !== 'ETIMEDOUT' || i === attempts - 1) {
+          throw err;
+        }
+        const delayMs = 200 + i * 200;
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+    throw lastError;
+  }
+
   async findById(id: string): Promise<Collecte | null> {
     const raw = await this.prisma.collecte.findUnique({
       where: { id },
@@ -74,18 +91,22 @@ export class PrismaCollecteRepository implements CollecteRepository {
     const skip = (filters.page - 1) * filters.limit;
 
     const [raws, total, aggregation] = await Promise.all([
-      this.prisma.collecte.findMany({
-        where,
-        include: { apporteur: true, collecteur: true, items: true },
-        skip,
-        take: filters.limit,
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.collecte.count({ where }),
-      this.prisma.collecte.aggregate({
-        where,
-        _sum: { quantiteKg: true, montantTotal: true },
-      }),
+      this.withRetry('findManyCollectes', () =>
+        this.prisma.collecte.findMany({
+          where,
+          include: { apporteur: true, collecteur: true, items: true },
+          skip,
+          take: filters.limit,
+          orderBy: { createdAt: 'desc' },
+        }),
+      ),
+      this.withRetry('countCollectes', () => this.prisma.collecte.count({ where })),
+      this.withRetry('aggregateCollectes', () =>
+        this.prisma.collecte.aggregate({
+          where,
+          _sum: { quantiteKg: true, montantTotal: true },
+        }),
+      ),
     ]);
 
     return {
@@ -121,28 +142,36 @@ export class PrismaCollecteRepository implements CollecteRepository {
 
     // Stats mois actuel
     const [aggMois, countMois] = await Promise.all([
-      this.prisma.collecte.aggregate({
-        where: { createdAt: { gte: debutMois } },
-        _sum: { quantiteKg: true, montantTotal: true },
-      }),
-      this.prisma.collecte.count({
-        where: { createdAt: { gte: debutMois } },
-      }),
+      this.withRetry('aggregateCollectesMois', () =>
+        this.prisma.collecte.aggregate({
+          where: { createdAt: { gte: debutMois } },
+          _sum: { quantiteKg: true, montantTotal: true },
+        }),
+      ),
+      this.withRetry('countCollectesMois', () =>
+        this.prisma.collecte.count({
+          where: { createdAt: { gte: debutMois } },
+        }),
+      ),
     ]);
 
     // Top 5 apporteurs
-    const topRaw = await this.prisma.collecte.groupBy({
-      by: ['apporteurId'],
-      _sum: { quantiteKg: true, montantTotal: true },
-      orderBy: { _sum: { quantiteKg: 'desc' } },
-      take: 5,
-    });
+    const topRaw = await this.withRetry('groupByTopApporteurs', () =>
+      this.prisma.collecte.groupBy({
+        by: ['apporteurId'],
+        _sum: { quantiteKg: true, montantTotal: true },
+        orderBy: { _sum: { quantiteKg: 'desc' } },
+        take: 5,
+      }),
+    );
 
     const topApporteurs = await Promise.all(
       topRaw.map(async (item) => {
-        const client = await this.prisma.client.findUnique({
-          where: { id: item.apporteurId },
-        });
+        const client = await this.withRetry('findApporteur', () =>
+          this.prisma.client.findUnique({
+            where: { id: item.apporteurId },
+          }),
+        );
         return {
           id: item.apporteurId,
           nom: client?.nom || 'Inconnu',
@@ -153,10 +182,12 @@ export class PrismaCollecteRepository implements CollecteRepository {
     );
 
     // Évolution 6 derniers mois
-    const collectes6mois = await this.prisma.collecte.findMany({
-      where: { createdAt: { gte: debutMoisPrecedent } },
-      select: { quantiteKg: true, createdAt: true },
-    });
+    const collectes6mois = await this.withRetry('collectes6mois', () =>
+      this.prisma.collecte.findMany({
+        where: { createdAt: { gte: debutMoisPrecedent } },
+        select: { quantiteKg: true, createdAt: true },
+      }),
+    );
 
     const evolutionMap = new Map<string, number>();
     collectes6mois.forEach((c) => {
