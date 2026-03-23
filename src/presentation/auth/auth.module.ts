@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './guards/jwt.strategy';
@@ -13,6 +14,7 @@ import { LoginUseCase } from '../../application/auth/login.use-case';
 import { RefreshTokenUseCase } from '../../application/auth/refresh-token.use-case';
 import { LogoutUseCase } from '../../application/auth/logout.use-case';
 import { GetProfileUseCase } from '../../application/auth/get-profile.use-case';
+import { TokenCleanupService } from '../../application/auth/token-cleanup.service';
 
 import { PrismaUserRepository } from '../../infrastructure/database/repositories/prisma-user.repository';
 import { PrismaRefreshTokenRepository } from '../../infrastructure/database/repositories/prisma-refresh-token.repository';
@@ -31,6 +33,7 @@ import { TOKEN_BLACKLIST_SERVICE } from '../../infrastructure/services/token-bla
 @Module({
   imports: [
     PassportModule,
+    ScheduleModule.forRoot(), // Active le planificateur de tâches
     CacheModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
@@ -57,6 +60,7 @@ import { TOKEN_BLACKLIST_SERVICE } from '../../infrastructure/services/token-bla
     RefreshTokenUseCase,
     LogoutUseCase,
     GetProfileUseCase,
+    TokenCleanupService, // Nettoyage des tokens expirés
 
     // Guards
     JwtStrategy,
