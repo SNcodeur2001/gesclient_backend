@@ -46,6 +46,7 @@ export interface CommandeRepository {
     type?: CommandeType;
     dateDebut?: Date;
     dateFin?: Date;
+    acheteurId?: string;
     page: number;
     limit: number;
   }): Promise<{

@@ -52,6 +52,7 @@ export class PrismaCommandeRepository implements CommandeRepository {
     type?: CommandeType;
     dateDebut?: Date;
     dateFin?: Date;
+    acheteurId?: string;
     page: number;
     limit: number;
   }): Promise<{
@@ -71,6 +72,7 @@ export class PrismaCommandeRepository implements CommandeRepository {
       ];
     }
     if (filters.commercialId) where.commercialId = filters.commercialId;
+    if (filters.acheteurId) where.acheteurId = filters.acheteurId;
     if (filters.statut) where.statut = filters.statut;
     if (filters.type) where.type = filters.type;
     if (filters.dateDebut || filters.dateFin) {

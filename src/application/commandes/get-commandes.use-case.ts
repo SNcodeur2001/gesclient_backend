@@ -13,6 +13,7 @@ export interface GetCommandesInput {
   type?: CommandeType;
   dateDebut?: Date;
   dateFin?: Date;
+  acheteurId?: string;
 }
 
 @Injectable()

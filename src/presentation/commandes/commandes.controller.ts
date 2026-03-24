@@ -104,6 +104,18 @@ export class CommandesController {
     type: String,
     description: 'Date de fin (format: YYYY-MM-DD)',
   })
+  @ApiQuery({
+    name: 'acheteurId',
+    required: false,
+    type: String,
+    description: 'Filtrer par acheteur (client) via son ID',
+  })
+  @ApiQuery({
+    name: 'clientId',
+    required: false,
+    type: String,
+    description: 'Alias de acheteurId (compatibilité front)',
+  })
   async findAll(
     @Query('page') page = 1,
     @Query('limit') limit = 5,
@@ -112,6 +124,8 @@ export class CommandesController {
     @Query('type') type?: CommandeType,
     @Query('dateDebut') dateDebut?: string,
     @Query('dateFin') dateFin?: string,
+    @Query('acheteurId') acheteurId?: string,
+    @Query('clientId') clientId?: string,
     @Request() req?: any,
   ) {
     const result = await this.getCommandes.execute(
@@ -123,6 +137,7 @@ export class CommandesController {
         type,
         dateDebut: dateDebut ? new Date(dateDebut) : undefined,
         dateFin: dateFin ? new Date(dateFin) : undefined,
+        acheteurId: acheteurId ?? clientId,
       },
       req.user.role,
       req.user.id,
