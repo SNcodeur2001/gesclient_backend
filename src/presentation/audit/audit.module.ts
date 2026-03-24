@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuditController } from './audit.controller';
 
 import { GetAuditLogsUseCase } from '../../application/audit/get-audit-logs.use-case';
+import { GetAuditLogByIdUseCase } from '../../application/audit/get-audit-log-by-id.use-case';
 
 import { PrismaAuditLogRepository } from '../../infrastructure/database/repositories/prisma-audit-log.repository';
 
@@ -15,6 +16,7 @@ import { AuthModule } from '../auth/auth.module';
   providers: [
     // Use Cases
     GetAuditLogsUseCase,
+    GetAuditLogByIdUseCase,
 
     // Bindings
     { provide: AUDIT_LOG_REPOSITORY, useClass: PrismaAuditLogRepository },

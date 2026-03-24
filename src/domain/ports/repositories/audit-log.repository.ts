@@ -5,6 +5,7 @@ export const AUDIT_LOG_REPOSITORY = 'AUDIT_LOG_REPOSITORY';
 
 export interface AuditLogRepository {
   log(data: Omit<AuditLog, 'id' | 'createdAt'>): Promise<void>;
+  findById(id: string): Promise<AuditLog | null>;
   findAll(filters: {
     userId?: string;
     action?: AuditAction;

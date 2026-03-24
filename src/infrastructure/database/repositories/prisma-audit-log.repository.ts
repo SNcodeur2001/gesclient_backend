@@ -29,6 +29,16 @@ export class PrismaAuditLogRepository implements AuditLogRepository {
     await this.withRetry('createAuditLog', () => this.prisma.auditLog.create({ data }));
   }
 
+  async findById(id: string): Promise<AuditLog | null> {
+    const raw = await this.withRetry('findAuditLogById', () =>
+      this.prisma.auditLog.findUnique({
+        where: { id },
+        include: { user: true },
+      }),
+    );
+    return raw ? this.toDomain(raw) : null;
+  }
+
   async findAll(filters: {
     userId?: string;
     action?: AuditAction;
@@ -79,6 +89,7 @@ export class PrismaAuditLogRepository implements AuditLogRepository {
     log.ancienneValeur = raw.ancienneValeur;
     log.nouvelleValeur = raw.nouvelleValeur;
     log.createdAt = raw.createdAt;
+    (log as any).user = raw.user;
     return log;
   }
 }

@@ -40,17 +40,36 @@ export class NotificationsController {
     type: Boolean,
     description: 'Filtrer par statut de lecture (true/false)',
   })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Numéro de page (défaut: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Nombre de résultats par page (max: 10)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Notifications récupérées avec succès',
     type: [NotificationResponseDto],
   })
   @ApiResponse({ status: 401, description: 'Non authentifié' })
-  async findAll(@Query('lu') lu?: string, @Request() req?: any) {
+  async findAll(
+    @Query('lu') lu?: string,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+    @Request() req?: any,
+  ) {
     const luBoolean = lu === 'true' ? true : lu === 'false' ? false : undefined;
     const result = await this.getNotifications.execute({
       userId: req.user.id,
       lu: luBoolean,
+      page: +page,
+      limit: Math.min(+limit || 10, 10),
     });
     return { success: true, data: result };
   }

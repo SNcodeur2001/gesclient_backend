@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Request, UseGuards, Param } from '@nestjs/common';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -14,6 +14,7 @@ import { Role } from '../../domain/enums/role.enum';
 import { AuditAction } from '../../domain/enums/audit-action.enum';
 
 import { GetAuditLogsUseCase } from '../../application/audit/get-audit-logs.use-case';
+import { GetAuditLogByIdUseCase } from '../../application/audit/get-audit-log-by-id.use-case';
 import { AuditLogResponseDto } from './dto/audit-log-response.dto';
 
 @ApiTags('Audit')
@@ -21,7 +22,10 @@ import { AuditLogResponseDto } from './dto/audit-log-response.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('audit')
 export class AuditController {
-  constructor(private readonly getAuditLogs: GetAuditLogsUseCase) {}
+  constructor(
+    private readonly getAuditLogs: GetAuditLogsUseCase,
+    private readonly getAuditLogById: GetAuditLogByIdUseCase,
+  ) {}
 
   @Get()
   @Roles(Role.DIRECTEUR)
@@ -38,7 +42,7 @@ export class AuditController {
     name: 'limit',
     required: false,
     type: Number,
-    description: 'Nombre de résultats par page (défaut: 10)',
+    description: 'Nombre de résultats par page (max: 7)',
   })
   @ApiQuery({
     name: 'userId',
@@ -82,7 +86,7 @@ export class AuditController {
   })
   async findAll(
     @Query('page') page = 1,
-    @Query('limit') limit = 10,
+    @Query('limit') limit = 7,
     @Query('userId') userId?: string,
     @Query('action') action?: AuditAction,
     @Query('entite') entite?: string,
@@ -92,7 +96,7 @@ export class AuditController {
   ) {
     const result = await this.getAuditLogs.execute({
       page: +page,
-      limit: +limit,
+      limit: Math.min(+limit || 7, 7),
       userId,
       action,
       entite,
@@ -100,5 +104,15 @@ export class AuditController {
       dateFin: dateFin ? new Date(dateFin) : undefined,
     });
     return { success: true, data: result };
+  }
+
+  @Get(':id')
+  @Roles(Role.DIRECTEUR)
+  @ApiOperation({ summary: "Détail d'un log d'audit" })
+  @ApiResponse({ status: 200, description: "Log d'audit récupéré", type: AuditLogResponseDto })
+  @ApiResponse({ status: 404, description: 'Log non trouvé' })
+  async findOne(@Param('id') id: string) {
+    const log = await this.getAuditLogById.execute(id);
+    return { success: true, data: log };
   }
 }

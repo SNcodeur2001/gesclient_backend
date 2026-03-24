@@ -39,15 +39,21 @@ export class PrismaNotificationRepository implements NotificationRepository {
   async findAll(
     userId: string,
     lu?: boolean,
-  ): Promise<{ items: Notification[]; totalNonLues: number }> {
+    page = 1,
+    limit = 10,
+  ): Promise<{ items: Notification[]; totalNonLues: number; total: number }> {
     const where: any = { userId };
     if (lu !== undefined) where.lu = lu;
 
-    const [raws, totalNonLues] = await Promise.all([
+    const skip = (page - 1) * limit;
+
+    const [raws, totalNonLues, total] = await Promise.all([
       this.withRetry('findManyNotifications', () =>
         this.prisma.notification.findMany({
           where,
           orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit,
         }),
       ),
       this.withRetry('countNotificationsNonLues', () =>
@@ -55,11 +61,15 @@ export class PrismaNotificationRepository implements NotificationRepository {
           where: { userId, lu: false },
         }),
       ),
+      this.withRetry('countNotifications', () =>
+        this.prisma.notification.count({ where }),
+      ),
     ]);
 
     return {
       items: raws.map(this.toDomain),
       totalNonLues,
+      total,
     };
   }
 

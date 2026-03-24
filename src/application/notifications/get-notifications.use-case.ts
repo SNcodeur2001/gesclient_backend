@@ -9,6 +9,8 @@ import { Notification } from '../../domain/entities/notification.entity';
 export interface GetNotificationsInput {
   userId: string;
   lu?: boolean;
+  page: number;
+  limit: number;
 }
 
 @Injectable()
@@ -21,7 +23,17 @@ export class GetNotificationsUseCase {
   async execute(input: GetNotificationsInput): Promise<{
     items: Notification[];
     totalNonLues: number;
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
   }> {
-    return this.notifRepo.findAll(input.userId, input.lu);
+    const result = await this.notifRepo.findAll(input.userId, input.lu, input.page, input.limit);
+    return {
+      ...result,
+      page: input.page,
+      limit: input.limit,
+      totalPages: Math.ceil(result.total / input.limit),
+    };
   }
 }
