@@ -79,6 +79,11 @@ export class AddPaiementUseCase {
     let facturesGenerees: AddPaiementOutput['facturesGenerees'] = undefined;
 
     if (input.type === PaiementType.ACOMPTE) {
+      if (commande.type === CommandeType.SUR_PLACE) {
+        throw new BadRequestException(
+          'Paiement sur place : le règlement doit être total (solde).',
+        );
+      }
       // Vérifier statut - doit être en préparation
       if (commande.statut !== CommandeStatut.EN_PREPARATION) {
         throw new BadRequestException("Commande non en attente d'acompte");
@@ -96,12 +101,11 @@ export class AddPaiementUseCase {
       // | SUR_PLACE paiement | **Définitif** |
       // | A_DISTANCE acompt 50-99% | **Proforma** |
       // | A_DISTANCE acompt 100% | **Définitif** (pas de proforma car déjà tout payé) |
-      const isSurPlace = commande.type === CommandeType.SUR_PLACE;
       const isPaiementComplet = nouveauAcompteVerse >= commande.montantTTC;
 
       try {
-        if (isSurPlace || isPaiementComplet) {
-          // SUR_PLACE ou A_DISTANCE 100% → Définitif seulement
+        if (isPaiementComplet) {
+          // A_DISTANCE 100% → Définitif seulement
           const result = await this.generateFactureUseCase.execute({
             commandeId: input.commandeId,
             type: FactureType.DEFINITIVE,
@@ -130,7 +134,7 @@ export class AddPaiementUseCase {
       }
     } else {
       // SOLDE
-      if (commande.statut !== CommandeStatut.PRETE) {
+      if (commande.type !== CommandeType.SUR_PLACE && commande.statut !== CommandeStatut.PRETE) {
         throw new BadRequestException(
           'La commande doit être PRETE pour enregistrer le solde',
         );

@@ -81,6 +81,15 @@ export class Commande {
    * Valide la transition de statut
    */
   validerTransition(nouveauStatut: CommandeStatut): void {
+    // Exception métier: si tout est déjà payé, on peut finaliser directement
+    if (
+      this.statut === CommandeStatut.EN_PREPARATION &&
+      nouveauStatut === CommandeStatut.FINALISEE &&
+      this.soldeRestant === 0
+    ) {
+      return;
+    }
+
     const transitions: Partial<Record<CommandeStatut, CommandeStatut[]>> = {
       [CommandeStatut.EN_PREPARATION]: [CommandeStatut.PRETE],
       [CommandeStatut.PRETE]: [CommandeStatut.FINALISEE],

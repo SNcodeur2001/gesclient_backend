@@ -72,6 +72,20 @@ export class FacturesController {
     };
   }
 
+  @Get('commande/:commandeId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.COMMERCIAL, Role.DIRECTEUR)
+  @ApiOperation({ summary: 'Dernière facture liée à une commande' })
+  @ApiResponse({ status: 200, description: 'Facture trouvée' })
+  @ApiResponse({ status: 404, description: 'Aucune facture pour cette commande' })
+  async findByCommande(@Param('commandeId') commandeId: string) {
+    const factures = await this.factureRepository.findByCommandeId(commandeId);
+    if (!factures.length) {
+      throw new NotFoundException('Aucune facture pour cette commande');
+    }
+    return { success: true, data: factures[0] };
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.COMMERCIAL, Role.DIRECTEUR)
