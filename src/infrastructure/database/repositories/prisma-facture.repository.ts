@@ -9,7 +9,11 @@ import type { FactureStatut } from '../../../domain/enums/facture-statut.enum';
 export class PrismaFactureRepository implements FactureRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async withRetry<T>(label: string, fn: () => Promise<T>, attempts = 2): Promise<T> {
+  private async withRetry<T>(
+    label: string,
+    fn: () => Promise<T>,
+    attempts = 2,
+  ): Promise<T> {
     let lastError: unknown;
     for (let i = 0; i < attempts; i++) {
       try {
@@ -163,9 +167,21 @@ export class PrismaFactureRepository implements FactureRepository {
       where.OR = [
         { numero: { contains: search, mode: 'insensitive' } },
         { commande: { reference: { contains: search, mode: 'insensitive' } } },
-        { commande: { acheteur: { nom: { contains: search, mode: 'insensitive' } } } },
-        { commande: { acheteur: { prenom: { contains: search, mode: 'insensitive' } } } },
-        { commande: { acheteur: { email: { contains: search, mode: 'insensitive' } } } },
+        {
+          commande: {
+            acheteur: { nom: { contains: search, mode: 'insensitive' } },
+          },
+        },
+        {
+          commande: {
+            acheteur: { prenom: { contains: search, mode: 'insensitive' } },
+          },
+        },
+        {
+          commande: {
+            acheteur: { email: { contains: search, mode: 'insensitive' } },
+          },
+        },
       ];
     }
     const [data, total] = await Promise.all([
@@ -184,7 +200,9 @@ export class PrismaFactureRepository implements FactureRepository {
           orderBy: { createdAt: 'desc' },
         }),
       ),
-      this.withRetry('countFactures', () => this.prisma.facture.count({ where })),
+      this.withRetry('countFactures', () =>
+        this.prisma.facture.count({ where }),
+      ),
     ]);
     return {
       data: data.map((d) => this.toDomain(d)),

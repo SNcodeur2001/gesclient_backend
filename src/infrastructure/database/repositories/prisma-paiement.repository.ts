@@ -9,7 +9,11 @@ import { ModePaiement } from '../../../domain/enums/mode-paiement.enum';
 export class PrismaPaiementRepository implements PaiementRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async withRetry<T>(label: string, fn: () => Promise<T>, attempts = 2): Promise<T> {
+  private async withRetry<T>(
+    label: string,
+    fn: () => Promise<T>,
+    attempts = 2,
+  ): Promise<T> {
     let lastError: unknown;
     for (let i = 0; i < attempts; i++) {
       try {
@@ -27,7 +31,9 @@ export class PrismaPaiementRepository implements PaiementRepository {
   }
 
   async create(data: Omit<Paiement, 'id' | 'createdAt'>): Promise<Paiement> {
-    const raw = await this.withRetry('createPaiement', () => this.prisma.paiement.create({ data }));
+    const raw = await this.withRetry('createPaiement', () =>
+      this.prisma.paiement.create({ data }),
+    );
     return this.toDomain(raw);
   }
 

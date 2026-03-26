@@ -7,7 +7,11 @@ import { Collecte } from '../../../domain/entities/collecte.entity';
 export class PrismaCollecteRepository implements CollecteRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async withRetry<T>(label: string, fn: () => Promise<T>, attempts = 2): Promise<T> {
+  private async withRetry<T>(
+    label: string,
+    fn: () => Promise<T>,
+    attempts = 2,
+  ): Promise<T> {
     let lastError: unknown;
     for (let i = 0; i < attempts; i++) {
       try {
@@ -104,7 +108,9 @@ export class PrismaCollecteRepository implements CollecteRepository {
           orderBy: { createdAt: 'desc' },
         }),
       ),
-      this.withRetry('countCollectes', () => this.prisma.collecte.count({ where })),
+      this.withRetry('countCollectes', () =>
+        this.prisma.collecte.count({ where }),
+      ),
       this.withRetry('aggregateCollectes', () =>
         this.prisma.collecte.aggregate({
           where,

@@ -9,7 +9,11 @@ import { ClientStatut } from '../../../domain/enums/client-statut.enum';
 export class PrismaClientRepository implements ClientRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async withRetry<T>(label: string, fn: () => Promise<T>, attempts = 2): Promise<T> {
+  private async withRetry<T>(
+    label: string,
+    fn: () => Promise<T>,
+    attempts = 2,
+  ): Promise<T> {
     let lastError: unknown;
     for (let i = 0; i < attempts; i++) {
       try {
@@ -51,7 +55,12 @@ export class PrismaClientRepository implements ClientRepository {
     search?: string;
     page: number;
     limit: number;
-  }): Promise<{ items: Client[]; total: number; totalActifs: number; totalRevenue: number }> {
+  }): Promise<{
+    items: Client[];
+    total: number;
+    totalActifs: number;
+    totalRevenue: number;
+  }> {
     const baseWhere: any = { deletedAt: null };
     if (filters.type) baseWhere.type = filters.type;
     if (filters.search) {
@@ -103,7 +112,9 @@ export class PrismaClientRepository implements ClientRepository {
   }
 
   async create(data: Omit<Client, 'id' | 'createdAt'>): Promise<Client> {
-    const raw = await this.withRetry('createClient', () => this.prisma.client.create({ data }));
+    const raw = await this.withRetry('createClient', () =>
+      this.prisma.client.create({ data }),
+    );
     return this.toDomain(raw);
   }
 

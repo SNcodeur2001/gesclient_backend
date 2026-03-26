@@ -39,7 +39,9 @@ export class SendFactureWhatsAppUseCase {
     const client = commande?.acheteur;
 
     if (!client?.telephone) {
-      throw new BadRequestException('Numéro de téléphone du client non disponible');
+      throw new BadRequestException(
+        'Numéro de téléphone du client non disponible',
+      );
     }
 
     let pdfBuffer: Buffer | null = null;

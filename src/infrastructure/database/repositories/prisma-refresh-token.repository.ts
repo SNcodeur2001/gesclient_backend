@@ -7,7 +7,11 @@ import { RefreshToken } from '../../../domain/entities/refresh-token.entity';
 export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async withRetry<T>(label: string, fn: () => Promise<T>, attempts = 2): Promise<T> {
+  private async withRetry<T>(
+    label: string,
+    fn: () => Promise<T>,
+    attempts = 2,
+  ): Promise<T> {
     let lastError: unknown;
     for (let i = 0; i < attempts; i++) {
       try {

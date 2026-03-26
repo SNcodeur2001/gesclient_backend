@@ -134,7 +134,10 @@ export class AddPaiementUseCase {
       }
     } else {
       // SOLDE
-      if (commande.type !== CommandeType.SUR_PLACE && commande.statut !== CommandeStatut.PRETE) {
+      if (
+        commande.type !== CommandeType.SUR_PLACE &&
+        commande.statut !== CommandeStatut.PRETE
+      ) {
         throw new BadRequestException(
           'La commande doit être PRETE pour enregistrer le solde',
         );

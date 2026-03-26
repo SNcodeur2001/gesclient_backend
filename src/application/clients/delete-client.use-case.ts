@@ -42,7 +42,8 @@ export class DeleteClientUseCase {
       action: AuditAction.DELETE,
       entite: 'Client',
       entiteId: id,
-      description: `Client ${client.nom} supprimé par ${user?.prenom || ''} ${user?.nom || ''}`.trim(),
+      description:
+        `Client ${client.nom} supprimé par ${user?.prenom || ''} ${user?.nom || ''}`.trim(),
       ancienneValeur: { nom: client.nom },
     });
   }

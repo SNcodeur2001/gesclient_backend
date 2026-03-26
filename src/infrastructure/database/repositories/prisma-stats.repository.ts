@@ -8,7 +8,11 @@ import { ClientType } from '../../../domain/enums/client-type.enum';
 export class PrismaStatsRepository implements StatsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async withRetry<T>(label: string, fn: () => Promise<T>, attempts = 2): Promise<T> {
+  private async withRetry<T>(
+    label: string,
+    fn: () => Promise<T>,
+    attempts = 2,
+  ): Promise<T> {
     let lastError: unknown;
     for (let i = 0; i < attempts; i++) {
       try {
@@ -116,7 +120,9 @@ export class PrismaStatsRepository implements StatsRepository {
       this.withRetry('commandesEnCours', () =>
         this.prisma.commande.count({
           where: {
-            statut: { in: [CommandeStatut.EN_PREPARATION, CommandeStatut.PRETE] },
+            statut: {
+              in: [CommandeStatut.EN_PREPARATION, CommandeStatut.PRETE],
+            },
           },
         }),
       ),

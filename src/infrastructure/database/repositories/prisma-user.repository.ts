@@ -8,7 +8,11 @@ import { Role } from '../../../domain/enums/role.enum';
 export class PrismaUserRepository implements UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async withRetry<T>(label: string, fn: () => Promise<T>, attempts = 2): Promise<T> {
+  private async withRetry<T>(
+    label: string,
+    fn: () => Promise<T>,
+    attempts = 2,
+  ): Promise<T> {
     let lastError: unknown;
     for (let i = 0; i < attempts; i++) {
       try {
@@ -44,7 +48,9 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async create(data: Omit<User, 'id' | 'createdAt'>): Promise<User> {
-    const raw = await this.withRetry('createUser', () => this.prisma.user.create({ data }));
+    const raw = await this.withRetry('createUser', () =>
+      this.prisma.user.create({ data }),
+    );
     return this.toDomain(raw);
   }
 

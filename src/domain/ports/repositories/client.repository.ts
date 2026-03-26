@@ -13,7 +13,12 @@ export interface ClientRepository {
     search?: string;
     page: number;
     limit: number;
-  }): Promise<{ items: Client[]; total: number; totalActifs: number; totalRevenue: number }>;
+  }): Promise<{
+    items: Client[];
+    total: number;
+    totalActifs: number;
+    totalRevenue: number;
+  }>;
   create(data: Omit<Client, 'id' | 'createdAt'>): Promise<Client>;
   update(id: string, data: Partial<Client>): Promise<Client>;
   softDelete(id: string): Promise<void>;

@@ -5,11 +5,11 @@ import type { RefreshTokenRepository } from '../../domain/ports/repositories/ref
 
 /**
  * Service de nettoyage des tokens expirés.
- * 
+ *
  * Ce service gère deux types de nettoyage :
  * 1. Au démarrage du serveur (onModuleInit) - nettoyage immédiat
  * 2. Chaque jour à minuit (@Cron) - nettoyage programmé
- * 
+ *
  * Cela garantit que les tokens expirés sont supprimés même si le serveur
  * a été arrêté pendant une période prolongée.
  */
@@ -28,10 +28,12 @@ export class TokenCleanupService implements OnModuleInit {
    */
   async onModuleInit(): Promise<void> {
     this.logger.log('🔄 Nettoyage des tokens expirés au démarrage...');
-    
+
     try {
       const deletedCount = await this.refreshTokenRepo.deleteExpired();
-      this.logger.log(`✅ ${deletedCount} token(s) expiré(s) supprimé(s) au démarrage`);
+      this.logger.log(
+        `✅ ${deletedCount} token(s) expiré(s) supprimé(s) au démarrage`,
+      );
     } catch (error) {
       this.logger.error('❌ Erreur lors du nettoyage au démarrage', error);
     }
@@ -40,16 +42,18 @@ export class TokenCleanupService implements OnModuleInit {
   /**
    * S'exécute automatiquement chaque jour à minuit.
    * Supprime les tokens qui ont expiré depuis le dernier nettoyage.
-   * 
+   *
    * Note: Ce nettoyage ne s'exécute que si le serveur est allumé.
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleCron(): Promise<void> {
     this.logger.log('🧹 Nettoyage programmé des tokens expirés...');
-    
+
     try {
       const deletedCount = await this.refreshTokenRepo.deleteExpired();
-      this.logger.log(`✅ ${deletedCount} token(s) expiré(s) supprimé(s) par le cron`);
+      this.logger.log(
+        `✅ ${deletedCount} token(s) expiré(s) supprimé(s) par le cron`,
+      );
     } catch (error) {
       this.logger.error('❌ Erreur lors du nettoyage programmé', error);
     }

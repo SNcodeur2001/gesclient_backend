@@ -28,7 +28,12 @@ export class GetNotificationsUseCase {
     limit: number;
     totalPages: number;
   }> {
-    const result = await this.notifRepo.findAll(input.userId, input.lu, input.page, input.limit);
+    const result = await this.notifRepo.findAll(
+      input.userId,
+      input.lu,
+      input.page,
+      input.limit,
+    );
     return {
       ...result,
       page: input.page,

@@ -58,7 +58,10 @@ export class GenerateFactureUseCase {
           this.cloudinaryStorage.isEnabled();
 
         if (useCloudinary) {
-          const uploaded = await this.cloudinaryStorage.uploadPdf(pdf, filename);
+          const uploaded = await this.cloudinaryStorage.uploadPdf(
+            pdf,
+            filename,
+          );
           await this.factureRepository.update(existingProforma.id, {
             fichierUrl: uploaded.url,
             cloudinaryPublicId: uploaded.publicId,
@@ -74,7 +77,9 @@ export class GenerateFactureUseCase {
         }
 
         const fichierPath = await this.fileStorage.saveFile(pdf, filename);
-        await this.factureRepository.update(existingProforma.id, { fichierPath });
+        await this.factureRepository.update(existingProforma.id, {
+          fichierPath,
+        });
         return {
           facture: { ...existingProforma, fichierPath },
           pdf,

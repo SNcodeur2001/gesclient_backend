@@ -8,7 +8,11 @@ import { AuditAction } from '../../../domain/enums/audit-action.enum';
 export class PrismaAuditLogRepository implements AuditLogRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async withRetry<T>(label: string, fn: () => Promise<T>, attempts = 2): Promise<T> {
+  private async withRetry<T>(
+    label: string,
+    fn: () => Promise<T>,
+    attempts = 2,
+  ): Promise<T> {
     let lastError: unknown;
     for (let i = 0; i < attempts; i++) {
       try {
@@ -26,7 +30,9 @@ export class PrismaAuditLogRepository implements AuditLogRepository {
   }
 
   async log(data: Omit<AuditLog, 'id' | 'createdAt'>): Promise<void> {
-    await this.withRetry('createAuditLog', () => this.prisma.auditLog.create({ data }));
+    await this.withRetry('createAuditLog', () =>
+      this.prisma.auditLog.create({ data }),
+    );
   }
 
   async findById(id: string): Promise<AuditLog | null> {
@@ -69,7 +75,9 @@ export class PrismaAuditLogRepository implements AuditLogRepository {
           orderBy: { createdAt: 'desc' },
         }),
       ),
-      this.withRetry('countAuditLogs', () => this.prisma.auditLog.count({ where })),
+      this.withRetry('countAuditLogs', () =>
+        this.prisma.auditLog.count({ where }),
+      ),
     ]);
 
     return {

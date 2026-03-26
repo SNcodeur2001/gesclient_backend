@@ -74,7 +74,8 @@ export class UpdateClientUseCase {
       action: AuditAction.UPDATE,
       entite: 'Client',
       entiteId: id,
-      description: `Client ${existing.nom} modifié par ${user?.prenom || ''} ${user?.nom || ''}`.trim(),
+      description:
+        `Client ${existing.nom} modifié par ${user?.prenom || ''} ${user?.nom || ''}`.trim(),
       ancienneValeur: { ...existing },
       nouvelleValeur: { ...data },
     });

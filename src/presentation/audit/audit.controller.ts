@@ -1,4 +1,11 @@
-import { Controller, Get, Query, Request, UseGuards, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Request,
+  UseGuards,
+  Param,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -109,7 +116,11 @@ export class AuditController {
   @Get(':id')
   @Roles(Role.DIRECTEUR)
   @ApiOperation({ summary: "Détail d'un log d'audit" })
-  @ApiResponse({ status: 200, description: "Log d'audit récupéré", type: AuditLogResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: "Log d'audit récupéré",
+    type: AuditLogResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Log non trouvé' })
   async findOne(@Param('id') id: string) {
     const log = await this.getAuditLogById.execute(id);

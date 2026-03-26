@@ -13,7 +13,11 @@ import { CommandeType } from '../../../domain/enums/commande-type.enum';
 export class PrismaCommandeRepository implements CommandeRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async withRetry<T>(label: string, fn: () => Promise<T>, attempts = 2): Promise<T> {
+  private async withRetry<T>(
+    label: string,
+    fn: () => Promise<T>,
+    attempts = 2,
+  ): Promise<T> {
     let lastError: unknown;
     for (let i = 0; i < attempts; i++) {
       try {
@@ -100,7 +104,9 @@ export class PrismaCommandeRepository implements CommandeRepository {
           orderBy: { createdAt: 'desc' },
         }),
       ),
-      this.withRetry('countCommandes', () => this.prisma.commande.count({ where })),
+      this.withRetry('countCommandes', () =>
+        this.prisma.commande.count({ where }),
+      ),
       this.withRetry('aggregateCA', () =>
         this.prisma.commande.aggregate({
           where: {
@@ -181,7 +187,9 @@ export class PrismaCommandeRepository implements CommandeRepository {
   }
 
   async countAll(): Promise<number> {
-    return this.withRetry('countAllCommandes', () => this.prisma.commande.count());
+    return this.withRetry('countAllCommandes', () =>
+      this.prisma.commande.count(),
+    );
   }
 
   private toDomain(raw: any): Commande {

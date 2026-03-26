@@ -91,7 +91,8 @@ export class CreateClientUseCase {
       action: AuditAction.CREATE,
       entite: 'Client',
       entiteId: client.id,
-      description: `Nouveau client ${client.nom} (${client.type}) créé par ${user?.prenom || ''} ${user?.nom || ''}`.trim(),
+      description:
+        `Nouveau client ${client.nom} (${client.type}) créé par ${user?.prenom || ''} ${user?.nom || ''}`.trim(),
       nouvelleValeur: { nom: client.nom, type: client.type },
     });
 

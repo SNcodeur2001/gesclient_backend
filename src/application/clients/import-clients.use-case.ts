@@ -146,7 +146,8 @@ export class ImportClientsUseCase {
       action: AuditAction.IMPORT,
       entite: 'Client',
       entiteId: 'bulk',
-      description: `Import de ${count} clients effectué par ${user?.prenom || ''} ${user?.nom || ''}`.trim(),
+      description:
+        `Import de ${count} clients effectué par ${user?.prenom || ''} ${user?.nom || ''}`.trim(),
       nouvelleValeur: { count, filename },
     });
 

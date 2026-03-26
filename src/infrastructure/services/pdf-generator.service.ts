@@ -61,27 +61,30 @@ export class PdfGeneratorService {
 
   private createDocDefinition(data: FactureData): any {
     const isProforma = data.type === FactureType.PROFORMA;
-    const documentTitle = isProforma ? 'FACTURE PROFORMA' : 'FACTURE DÉFINITIVE';
+    const documentTitle = isProforma
+      ? 'FACTURE PROFORMA'
+      : 'FACTURE DÉFINITIVE';
 
     // Calculate TVA percentage from data
     const tvaPercentage =
       data.montantHT > 0 ? (data.tva / data.montantHT) * 100 : 0;
 
-    const items = (data.items && data.items.length > 0)
-      ? data.items.map((i) => ({
-        label: i.produit,
-        qty: i.quantite,
-        price: i.prixUnitaire,
-        total: i.quantite * i.prixUnitaire,
-      }))
-      : [
-          {
-            label: data.produit,
-            qty: data.quantite,
-            price: data.prixUnitaire,
-            total: data.quantite * data.prixUnitaire,
-          },
-        ];
+    const items =
+      data.items && data.items.length > 0
+        ? data.items.map((i) => ({
+            label: i.produit,
+            qty: i.quantite,
+            price: i.prixUnitaire,
+            total: i.quantite * i.prixUnitaire,
+          }))
+        : [
+            {
+              label: data.produit,
+              qty: data.quantite,
+              price: data.prixUnitaire,
+              total: data.quantite * data.prixUnitaire,
+            },
+          ];
 
     return {
       pageMargins: [40, 40, 40, 40],
@@ -107,7 +110,10 @@ export class PdfGeneratorService {
                   style: 'documentType',
                 },
                 { text: `N° ${data.numero}`, style: 'invoiceNumber' },
-                { text: `Date: ${this.formatDate(data.date)}`, style: 'invoiceDate' },
+                {
+                  text: `Date: ${this.formatDate(data.date)}`,
+                  style: 'invoiceDate',
+                },
               ],
               alignment: 'right',
             },
@@ -132,7 +138,9 @@ export class PdfGeneratorService {
                       text: [
                         data.client.adresse ? `${data.client.adresse}\n` : '',
                         data.client.email ? `${data.client.email}` : '',
-                        data.client.telephone ? ` | ${data.client.telephone}` : '',
+                        data.client.telephone
+                          ? ` | ${data.client.telephone}`
+                          : '',
                       ].join(''),
                       style: 'clientMeta',
                     },
@@ -164,19 +172,40 @@ export class PdfGeneratorService {
               [
                 { text: 'Désignation', style: 'tableHeader' },
                 { text: 'Qté', style: 'tableHeader', alignment: 'center' },
-                { text: 'Prix Unit. (FCFA)', style: 'tableHeader', alignment: 'right' },
-                { text: 'Sous-total (FCFA)', style: 'tableHeader', alignment: 'right' },
+                {
+                  text: 'Prix Unit. (FCFA)',
+                  style: 'tableHeader',
+                  alignment: 'right',
+                },
+                {
+                  text: 'Sous-total (FCFA)',
+                  style: 'tableHeader',
+                  alignment: 'right',
+                },
               ],
-              ...items.map((i) => ([
+              ...items.map((i) => [
                 { text: i.label, style: 'tableCell' },
-                { text: String(i.qty), style: 'tableCell', alignment: 'center' },
-                { text: this.formatCurrency(i.price), style: 'tableCell', alignment: 'right' },
-                { text: this.formatCurrency(i.total), style: 'tableCellBold', alignment: 'right' },
-              ])),
+                {
+                  text: String(i.qty),
+                  style: 'tableCell',
+                  alignment: 'center',
+                },
+                {
+                  text: this.formatCurrency(i.price),
+                  style: 'tableCell',
+                  alignment: 'right',
+                },
+                {
+                  text: this.formatCurrency(i.total),
+                  style: 'tableCellBold',
+                  alignment: 'right',
+                },
+              ]),
             ],
           },
           layout: {
-            fillColor: (rowIndex: number) => (rowIndex === 0 ? '#F1F5F9' : null),
+            fillColor: (rowIndex: number) =>
+              rowIndex === 0 ? '#F1F5F9' : null,
             hLineColor: () => '#E2E8F0',
             vLineColor: () => '#E2E8F0',
           },

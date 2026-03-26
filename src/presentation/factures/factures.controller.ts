@@ -77,7 +77,10 @@ export class FacturesController {
   @Roles(Role.COMMERCIAL, Role.DIRECTEUR)
   @ApiOperation({ summary: 'Dernière facture liée à une commande' })
   @ApiResponse({ status: 200, description: 'Facture trouvée' })
-  @ApiResponse({ status: 404, description: 'Aucune facture pour cette commande' })
+  @ApiResponse({
+    status: 404,
+    description: 'Aucune facture pour cette commande',
+  })
   async findByCommande(@Param('commandeId') commandeId: string) {
     const factures = await this.factureRepository.findByCommandeId(commandeId);
     if (!factures.length) {

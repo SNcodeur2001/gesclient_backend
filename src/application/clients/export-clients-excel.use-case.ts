@@ -70,7 +70,8 @@ export class ExportClientsExcelUseCase {
         action: AuditAction.EXPORT,
         entite: 'Client',
         entiteId: 'bulk',
-        description: `Export clients effectué par ${user?.prenom || ''} ${user?.nom || ''}`.trim(),
+        description:
+          `Export clients effectué par ${user?.prenom || ''} ${user?.nom || ''}`.trim(),
       });
     }
 

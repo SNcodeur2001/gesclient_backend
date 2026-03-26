@@ -46,7 +46,9 @@ export class GetFacturePdfUseCase {
       process.env.STORAGE_PROVIDER === 'cloudinary' &&
       this.cloudinaryStorage.isEnabled()
     ) {
-      pdf = await this.cloudinaryStorage.downloadPdf(facture.cloudinaryPublicId);
+      pdf = await this.cloudinaryStorage.downloadPdf(
+        facture.cloudinaryPublicId,
+      );
     } else if (facture.fichierPath) {
       pdf = await this.fileStorage.readFile(facture.fichierPath);
     }

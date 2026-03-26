@@ -51,7 +51,15 @@ export class CloudinaryStorageService {
         },
         (error, uploadResult) => {
           if (error || !uploadResult) {
-            reject(error || new Error('Upload Cloudinary échoué'));
+            const err =
+              error instanceof Error
+                ? error
+                : new Error(
+                    typeof error === 'string'
+                      ? error
+                      : 'Upload Cloudinary échoué',
+                  );
+            reject(err);
             return;
           }
           resolve(uploadResult);
@@ -95,13 +103,19 @@ export class CloudinaryStorageService {
             return;
           }
 
-          if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+          if (
+            res.statusCode >= 300 &&
+            res.statusCode < 400 &&
+            res.headers.location
+          ) {
             this.fetchBuffer(res.headers.location).then(resolve).catch(reject);
             return;
           }
 
           if (res.statusCode >= 400) {
-            reject(new Error(`Téléchargement Cloudinary échoué: ${res.statusCode}`));
+            reject(
+              new Error(`Téléchargement Cloudinary échoué: ${res.statusCode}`),
+            );
             return;
           }
 
