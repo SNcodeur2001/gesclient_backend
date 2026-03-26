@@ -3,6 +3,7 @@ import type { FactureRepository } from '../../domain/ports/repositories/facture.
 import { FACTURE_REPOSITORY } from '../../domain/ports/repositories/facture.repository';
 import { FactureStatut } from '../../domain/enums/facture-statut.enum';
 import { FileStorageService } from '../../infrastructure/services/file-storage.service';
+import { CloudinaryStorageService } from '../../infrastructure/services/cloudinary-storage.service';
 
 @Injectable()
 export class GetFacturePdfUseCase {
@@ -10,6 +11,7 @@ export class GetFacturePdfUseCase {
     @Inject(FACTURE_REPOSITORY)
     private readonly factureRepository: FactureRepository,
     private readonly fileStorage: FileStorageService,
+    private readonly cloudinaryStorage: CloudinaryStorageService,
   ) {}
 
   async execute(
@@ -38,12 +40,20 @@ export class GetFacturePdfUseCase {
       }
     }
 
-    if (!facture.fichierPath) {
-      throw new Error('PDF non disponible pour cette facture');
+    let pdf: Buffer | null = null;
+    if (
+      facture.cloudinaryPublicId &&
+      process.env.STORAGE_PROVIDER === 'cloudinary' &&
+      this.cloudinaryStorage.isEnabled()
+    ) {
+      pdf = await this.cloudinaryStorage.downloadPdf(facture.cloudinaryPublicId);
+    } else if (facture.fichierPath) {
+      pdf = await this.fileStorage.readFile(facture.fichierPath);
     }
 
-    // Read PDF from file system
-    const pdf = await this.fileStorage.readFile(facture.fichierPath);
+    if (!pdf) {
+      throw new Error('PDF non disponible pour cette facture');
+    }
 
     // Invalidate token after one-time use (if token was used)
     if (options?.token) {

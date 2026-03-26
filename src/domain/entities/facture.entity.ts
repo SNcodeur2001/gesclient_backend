@@ -11,6 +11,8 @@ export class Facture {
   montantTTC!: number;
   fichierBlob?: Buffer;
   fichierPath?: string;
+  fichierUrl?: string;
+  cloudinaryPublicId?: string;
   statut!: FactureStatut;
   envoyeeWhatsApp!: boolean;
   dateEnvoiWhatsApp?: Date;

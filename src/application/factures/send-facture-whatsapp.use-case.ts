@@ -9,6 +9,7 @@ import type { FactureRepository } from '../../domain/ports/repositories/facture.
 import { FACTURE_REPOSITORY } from '../../domain/ports/repositories/facture.repository';
 import { WhatsAppService } from '../../infrastructure/services/whatsapp.service';
 import { FileStorageService } from '../../infrastructure/services/file-storage.service';
+import { CloudinaryStorageService } from '../../infrastructure/services/cloudinary-storage.service';
 import { FactureStatut } from '../../domain/enums/facture-statut.enum';
 import { FactureType } from '../../domain/enums/facture-type.enum';
 
@@ -22,6 +23,7 @@ export class SendFactureWhatsAppUseCase {
     private readonly factureRepository: FactureRepository,
     private readonly whatsAppService: WhatsAppService,
     private readonly fileStorage: FileStorageService,
+    private readonly cloudinaryStorage: CloudinaryStorageService,
   ) {}
 
   async execute(
@@ -40,12 +42,22 @@ export class SendFactureWhatsAppUseCase {
       throw new BadRequestException('Numéro de téléphone du client non disponible');
     }
 
-    if (!facture.fichierPath) {
-      throw new BadRequestException('PDF non disponible pour cette facture');
+    let pdfBuffer: Buffer | null = null;
+    if (
+      facture.cloudinaryPublicId &&
+      process.env.STORAGE_PROVIDER === 'cloudinary' &&
+      this.cloudinaryStorage.isEnabled()
+    ) {
+      pdfBuffer = await this.cloudinaryStorage.downloadPdf(
+        facture.cloudinaryPublicId,
+      );
+    } else if (facture.fichierPath) {
+      pdfBuffer = await this.fileStorage.readFile(facture.fichierPath);
     }
 
-    // Read PDF from file system
-    const pdfBuffer = await this.fileStorage.readFile(facture.fichierPath);
+    if (!pdfBuffer) {
+      throw new BadRequestException('PDF non disponible pour cette facture');
+    }
 
     // Generate one-time download token
     const downloadToken = randomUUID();

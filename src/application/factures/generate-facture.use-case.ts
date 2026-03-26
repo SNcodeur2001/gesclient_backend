@@ -9,6 +9,7 @@ import {
   FactureData,
 } from '../../infrastructure/services/pdf-generator.service';
 import { FileStorageService } from '../../infrastructure/services/file-storage.service';
+import { CloudinaryStorageService } from '../../infrastructure/services/cloudinary-storage.service';
 import { FactureType } from '../../domain/enums/facture-type.enum';
 
 @Injectable()
@@ -20,6 +21,7 @@ export class GenerateFactureUseCase {
     private readonly commandeRepository: CommandeRepository,
     private readonly pdfGenerator: PdfGeneratorService,
     private readonly fileStorage: FileStorageService,
+    private readonly cloudinaryStorage: CloudinaryStorageService,
   ) {}
 
   async execute(params: {
@@ -51,10 +53,28 @@ export class GenerateFactureUseCase {
           params.type,
         );
         const filename = `${existingProforma.numero}.pdf`;
+        const useCloudinary =
+          process.env.STORAGE_PROVIDER === 'cloudinary' &&
+          this.cloudinaryStorage.isEnabled();
+
+        if (useCloudinary) {
+          const uploaded = await this.cloudinaryStorage.uploadPdf(pdf, filename);
+          await this.factureRepository.update(existingProforma.id, {
+            fichierUrl: uploaded.url,
+            cloudinaryPublicId: uploaded.publicId,
+          });
+          return {
+            facture: {
+              ...existingProforma,
+              fichierUrl: uploaded.url,
+              cloudinaryPublicId: uploaded.publicId,
+            },
+            pdf,
+          };
+        }
+
         const fichierPath = await this.fileStorage.saveFile(pdf, filename);
-        await this.factureRepository.update(existingProforma.id, {
-          fichierPath,
-        });
+        await this.factureRepository.update(existingProforma.id, { fichierPath });
         return {
           facture: { ...existingProforma, fichierPath },
           pdf,
@@ -101,8 +121,28 @@ export class GenerateFactureUseCase {
     // Generate PDF
     const pdf = await this.pdfGenerator.generateFacture(factureData);
 
-    // Save PDF to disk instead of database
     const filename = `${numero}.pdf`;
+    const useCloudinary =
+      process.env.STORAGE_PROVIDER === 'cloudinary' &&
+      this.cloudinaryStorage.isEnabled();
+
+    if (useCloudinary) {
+      const uploaded = await this.cloudinaryStorage.uploadPdf(pdf, filename);
+      const facture = await this.factureRepository.create({
+        numero,
+        type: params.type,
+        commandeId: params.commandeId,
+        montantHT: commande.montantHT,
+        tva: commande.tva,
+        montantTTC: commande.montantTTC,
+        fichierUrl: uploaded.url,
+        cloudinaryPublicId: uploaded.publicId,
+        genereParId: params.genereParId,
+      });
+      return { facture, pdf };
+    }
+
+    // Save PDF to disk instead of database
     const fichierPath = await this.fileStorage.saveFile(pdf, filename);
 
     // Create facture in database (without blob)

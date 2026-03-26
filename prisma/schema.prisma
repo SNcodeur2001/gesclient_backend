@@ -211,6 +211,8 @@ model Facture {
   montantTTC        Float
   fichierBlob       Bytes?        // PDF stocké en base
   fichierPath       String?       // Chemin du fichier si stocké sur disque
+  fichierUrl        String?       // URL du PDF stocké sur un service externe (Cloudinary)
+  cloudinaryPublicId String?      // Identifiant Cloudinary (resource)
   statut            FactureStatut @default(GENEREE)
   envoyeeWhatsApp   Boolean       @default(false)
   dateEnvoiWhatsApp DateTime?

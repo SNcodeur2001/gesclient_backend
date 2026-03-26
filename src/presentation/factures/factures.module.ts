@@ -14,6 +14,7 @@ import { COMMANDE_REPOSITORY } from '../../domain/ports/repositories/commande.re
 import { PdfGeneratorService } from '../../infrastructure/services/pdf-generator.service';
 import { WhatsAppService } from '../../infrastructure/services/whatsapp.service';
 import { FileStorageService } from '../../infrastructure/services/file-storage.service';
+import { CloudinaryStorageService } from '../../infrastructure/services/cloudinary-storage.service';
 
 import { PrismaModule } from '../../infrastructure/database/prisma.module';
 import { AuthModule } from '../auth/auth.module';
@@ -44,6 +45,7 @@ import { AuthModule } from '../auth/auth.module';
     PdfGeneratorService,
     WhatsAppService,
     FileStorageService,
+    CloudinaryStorageService,
   ],
   exports: [
     GenerateFactureUseCase,

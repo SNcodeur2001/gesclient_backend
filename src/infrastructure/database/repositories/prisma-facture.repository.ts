@@ -37,6 +37,8 @@ export class PrismaFactureRepository implements FactureRepository {
           tva: data.tva!,
           montantTTC: data.montantTTC!,
           fichierPath: data.fichierPath,
+          fichierUrl: data.fichierUrl,
+          cloudinaryPublicId: data.cloudinaryPublicId,
           statut: (data.statut as any) || 'GENEREE',
           envoyeeWhatsApp: data.envoyeeWhatsApp || false,
           dateEnvoiWhatsApp: data.dateEnvoiWhatsApp,
@@ -101,8 +103,14 @@ export class PrismaFactureRepository implements FactureRepository {
 
   async update(id: string, data: Partial<Facture>): Promise<Facture> {
     const updateData: any = {};
-    if (data.fichierPath) {
+    if (data.fichierPath !== undefined) {
       updateData.fichierPath = data.fichierPath;
+    }
+    if (data.fichierUrl !== undefined) {
+      updateData.fichierUrl = data.fichierUrl;
+    }
+    if (data.cloudinaryPublicId !== undefined) {
+      updateData.cloudinaryPublicId = data.cloudinaryPublicId;
     }
     if (data.statut) {
       updateData.statut = data.statut as any;
@@ -116,10 +124,10 @@ export class PrismaFactureRepository implements FactureRepository {
     if (data.telephoneEnvoye) {
       updateData.telephoneEnvoye = data.telephoneEnvoye;
     }
-    if (data.downloadToken) {
+    if (data.downloadToken !== undefined) {
       updateData.downloadToken = data.downloadToken;
     }
-    if (data.downloadTokenExpiresAt) {
+    if (data.downloadTokenExpiresAt !== undefined) {
       updateData.downloadTokenExpiresAt = data.downloadTokenExpiresAt;
     }
 
@@ -194,6 +202,8 @@ export class PrismaFactureRepository implements FactureRepository {
     facture.tva = raw.tva;
     facture.montantTTC = raw.montantTTC;
     facture.fichierPath = raw.fichierPath;
+    facture.fichierUrl = raw.fichierUrl;
+    facture.cloudinaryPublicId = raw.cloudinaryPublicId;
     facture.statut = raw.statut;
     facture.envoyeeWhatsApp = raw.envoyeeWhatsApp;
     facture.dateEnvoiWhatsApp = raw.dateEnvoiWhatsApp;
