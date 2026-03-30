@@ -22,7 +22,7 @@ export class GetFacturePdfUseCase {
 
   async execute(
     factureId: string,
-    options?: { token?: string; userId?: string },
+    options?: { token?: string; userId?: string; consumeToken?: boolean },
   ): Promise<{ facture: any; pdf: Buffer }> {
     let facture;
 
@@ -30,7 +30,9 @@ export class GetFacturePdfUseCase {
     if (options?.token) {
       facture = await this.factureRepository.findByDownloadToken(options.token);
       if (!facture) {
-        throw new BadRequestException('Lien de téléchargement invalide ou expiré');
+        throw new BadRequestException(
+          'Lien de téléchargement invalide ou expiré',
+        );
       }
       if (facture.id !== factureId) {
         throw new BadRequestException('Lien de téléchargement invalide');
@@ -65,8 +67,8 @@ export class GetFacturePdfUseCase {
       throw new NotFoundException('PDF non disponible pour cette facture');
     }
 
-    // Invalidate token after one-time use (if token was used)
-    if (options?.token) {
+    // Consommer le token uniquement si demandé (ex: clic sur "Télécharger")
+    if (options?.token && options?.consumeToken) {
       await this.factureRepository.update(factureId, {
         downloadToken: '',
         downloadTokenExpiresAt: new Date(0), // Set to epoch to mark as expired

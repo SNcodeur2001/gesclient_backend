@@ -164,12 +164,23 @@ export class FacturesController {
   async downloadPdf(
     @Param('id') id: string,
     @Query('token') token?: string,
+    @Query('download') download?: string,
     @Request() req?: any,
     @Res() res?: any,
   ) {
     // If token provided, its an external download (no auth required)
     if (token) {
-      const { pdf, facture } = await this.getFacturePdf.execute(id, { token });
+      // If no explicit download flag, return a confirmation page (previews won't click)
+      if (!download) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.send(this.renderDownloadPage(id, token));
+        return;
+      }
+
+      const { pdf, facture } = await this.getFacturePdf.execute(id, {
+        token,
+        consumeToken: true,
+      });
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader(
@@ -190,6 +201,32 @@ export class FacturesController {
       `attachment; filename=${facture.numero}.pdf`,
     );
     res.send(pdf);
+  }
+
+  private renderDownloadPage(factureId: string, token: string): string {
+    const downloadUrl = `/api/v1/factures/${factureId}/pdf?token=${token}&download=1`;
+    return `<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Téléchargement facture</title>
+    <style>
+      body{font-family:Arial,Helvetica,sans-serif;background:#f6f7fb;margin:0;padding:32px;color:#1f2937}
+      .card{max-width:520px;margin:12vh auto;background:#fff;border-radius:10px;padding:28px;box-shadow:0 10px 25px rgba(0,0,0,.08)}
+      h1{font-size:20px;margin:0 0 10px}
+      p{margin:0 0 18px;color:#4b5563}
+      a.btn{display:inline-block;background:#0f766e;color:#fff;text-decoration:none;padding:12px 18px;border-radius:8px}
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Téléchargement de votre facture</h1>
+      <p>Cliquez sur le bouton ci-dessous pour lancer le téléchargement.</p>
+      <a class="btn" href="${downloadUrl}">Télécharger la facture</a>
+    </div>
+  </body>
+</html>`;
   }
 
   @Post(':id/envoyer-whatsapp')
