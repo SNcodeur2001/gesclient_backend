@@ -45,16 +45,18 @@ export class SendFactureWhatsAppUseCase {
     }
 
     let pdfBuffer: Buffer | null = null;
-    if (
-      facture.cloudinaryPublicId &&
-      process.env.STORAGE_PROVIDER === 'cloudinary' &&
-      this.cloudinaryStorage.isEnabled()
-    ) {
+    if (facture.cloudinaryPublicId && this.cloudinaryStorage.isEnabled()) {
       pdfBuffer = await this.cloudinaryStorage.downloadPdf(
         facture.cloudinaryPublicId,
       );
     } else if (facture.fichierPath) {
-      pdfBuffer = await this.fileStorage.readFile(facture.fichierPath);
+      try {
+        pdfBuffer = await this.fileStorage.readFile(facture.fichierPath);
+      } catch (err: any) {
+        throw new BadRequestException(
+          'PDF introuvable sur le serveur (fichier manquant).',
+        );
+      }
     }
 
     if (!pdfBuffer) {

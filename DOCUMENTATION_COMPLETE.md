@@ -194,16 +194,7 @@ src/
 │   └── filters/
 │       └── domain-exception.filter.ts
 │
-└── presentation/                            # Couche Présentation (API)
-    ├── auth/
-    │   ├── auth.controller.ts
-    │   ├── auth.module.ts
-    │   ├── guards/
-    │   │   ├── jwt-auth.guard.ts
-    │   │   ├── jwt.strategy.ts
-    │   │   ├── roles.decorator.ts
-    │   │   └── roles.guard.ts
-    │   └── dto/
+└──r
     ├── clients/
     │   ├── clients.controller.ts
     │   ├── clients.module.ts

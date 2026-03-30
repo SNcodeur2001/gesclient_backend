@@ -1,4 +1,10 @@
-import { Injectable, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  BadRequestException,
+  UnauthorizedException,
+  NotFoundException,
+} from '@nestjs/common';
 import type { FactureRepository } from '../../domain/ports/repositories/facture.repository';
 import { FACTURE_REPOSITORY } from '../../domain/ports/repositories/facture.repository';
 import { FactureStatut } from '../../domain/enums/facture-statut.enum';
@@ -24,37 +30,39 @@ export class GetFacturePdfUseCase {
     if (options?.token) {
       facture = await this.factureRepository.findByDownloadToken(options.token);
       if (!facture) {
-        throw new Error('Lien de téléchargement invalide ou expiré');
+        throw new BadRequestException('Lien de téléchargement invalide ou expiré');
       }
       if (facture.id !== factureId) {
-        throw new Error('Lien de téléchargement invalide');
+        throw new BadRequestException('Lien de téléchargement invalide');
       }
     } else {
       // Use authenticated access (for internal users)
       if (!options?.userId) {
-        throw new Error('Authentification requise');
+        throw new UnauthorizedException('Authentification requise');
       }
       facture = await this.factureRepository.findById(factureId);
       if (!facture) {
-        throw new Error('Facture introuvable');
+        throw new NotFoundException('Facture introuvable');
       }
     }
 
     let pdf: Buffer | null = null;
-    if (
-      facture.cloudinaryPublicId &&
-      process.env.STORAGE_PROVIDER === 'cloudinary' &&
-      this.cloudinaryStorage.isEnabled()
-    ) {
+    if (facture.cloudinaryPublicId && this.cloudinaryStorage.isEnabled()) {
       pdf = await this.cloudinaryStorage.downloadPdf(
         facture.cloudinaryPublicId,
       );
     } else if (facture.fichierPath) {
-      pdf = await this.fileStorage.readFile(facture.fichierPath);
+      try {
+        pdf = await this.fileStorage.readFile(facture.fichierPath);
+      } catch (err: any) {
+        throw new NotFoundException(
+          'PDF introuvable sur le serveur (fichier manquant).',
+        );
+      }
     }
 
     if (!pdf) {
-      throw new Error('PDF non disponible pour cette facture');
+      throw new NotFoundException('PDF non disponible pour cette facture');
     }
 
     // Invalidate token after one-time use (if token was used)
